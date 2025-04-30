@@ -65,6 +65,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a new batch
+  app.post('/api/batches', async (req, res) => {
+    try {
+      const validatedData = insertBatchSchema.parse(req.body);
+      
+      const newBatch = await storage.createBatch(validatedData);
+      res.json(newBatch);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create batch" });
+    }
+  });
+
   // Update batch
   app.put('/api/batches/:id', async (req, res) => {
     try {
