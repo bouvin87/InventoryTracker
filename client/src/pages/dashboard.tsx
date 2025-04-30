@@ -160,6 +160,20 @@ export default function Dashboard() {
       });
     },
   });
+  
+  // Undo inventory mutation
+  const undoInventoryMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('POST', `/api/batches/${id}/undo-inventory`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
+      toast({
+        title: "Inventering ångrad",
+        description: "Batchen har återställts till ej påbörjad status",
+      });
+    },
+  });
 
   // Handle batch actions
   const handleViewBatch = (batch: BatchItem) => {
@@ -198,6 +212,18 @@ export default function Dashboard() {
 
   const handleImportFile = async (file: File, overwrite: boolean) => {
     await importBatchesMutation.mutateAsync({ file, overwrite });
+  };
+  
+  const handleUndoInventory = async (batch: BatchItem) => {
+    try {
+      await undoInventoryMutation.mutateAsync(batch.id);
+    } catch (error) {
+      toast({
+        title: "Fel vid återställning",
+        description: "Kunde inte ångra inventering",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

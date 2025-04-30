@@ -249,6 +249,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to parse Excel file", error: error instanceof Error ? error.message : String(error) });
     }
   });
+  
+  // Undo inventory (reset to not started)
+  app.post('/api/batches/:id/undo-inventory', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getBatch(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "Batch not found" });
+      }
+      
+      // Reset the batch to not started state
+      const updatedBatch = await storage.updateBatch(id, {
+        status: 'not_started',
+        inventoredWeight: null,
+        updatedAt: new Date().toISOString()
+      });
+      
+      res.json(updatedBatch);
+    } catch (error) {
+      console.error("Error undoing inventory:", error);
+      res.status(500).json({ message: "Failed to undo inventory" });
+    }
+  });
 
   // Export to Excel
   app.get('/api/export', async (req, res) => {

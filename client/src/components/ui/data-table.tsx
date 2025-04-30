@@ -25,11 +25,12 @@ interface DataTableProps {
   onView: (item: BatchItem) => void;
   onInventoryComplete: (item: BatchItem) => void;
   onInventoryPartial: (item: BatchItem) => void;
+  onUndoInventory?: (item: BatchItem) => void;
 }
 
 const ITEMS_PER_PAGE = 5;
 
-export function DataTable({ data, onView, onInventoryComplete, onInventoryPartial }: DataTableProps) {
+export function DataTable({ data, onView, onInventoryComplete, onInventoryPartial, onUndoInventory }: DataTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<keyof BatchItem | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -221,6 +222,7 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                       </Tooltip>
                     </TooltipProvider>
                     
+                    {/* Inventering/Delvis inventering för ej påbörjade */}
                     {item.status === 'not_started' && (
                       <>
                         <TooltipProvider>
@@ -249,6 +251,53 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                           </Tooltip>
                         </TooltipProvider>
                       </>
+                    )}
+                    
+                    {/* Fortsätt inventera för delvis inventerade */}
+                    {item.status === 'partially_completed' && (
+                      <>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => onInventoryComplete(item)}>
+                                <span className="material-icons text-sm">check_circle</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Slutför inventering</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onInventoryPartial(item)}>
+                                <span className="material-icons text-sm">add</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Fortsätt inventera</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </>
+                    )}
+                    
+                    {/* Ångra-knapp för inventerade eller delvis inventerade */}
+                    {(item.status === 'completed' || item.status === 'partially_completed') && onUndoInventory && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => onUndoInventory(item)}>
+                              <span className="material-icons text-sm">undo</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Ångra inventering</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                 </TableCell>
