@@ -109,7 +109,8 @@ export class MemStorage implements IStorage {
       status: "not_started",
       inventoredWeight: null,
       updatedAt: null,
-      userId: null
+      userId: null,
+      userName: null
     };
     this.batches.set(id, batch);
     return batch;
@@ -236,7 +237,8 @@ export class MemStorage implements IStorage {
         status: "not_started",
         inventoredWeight: null,
         updatedAt: null,
-        userId: null
+        userId: null,
+        userName: null
       });
     });
     
@@ -248,7 +250,8 @@ export class MemStorage implements IStorage {
         status: "completed",
         inventoredWeight: batch1.totalWeight,
         updatedAt: "2023-09-12 14:32",
-        userId: 1
+        userId: 1,
+        userName: "John Doe"
       });
     }
     
@@ -259,7 +262,8 @@ export class MemStorage implements IStorage {
         status: "partially_completed",
         inventoredWeight: Math.round(batch2.totalWeight * 0.7),
         updatedAt: "2023-09-12 10:15",
-        userId: 1
+        userId: 1,
+        userName: "John Doe"
       });
     }
     
@@ -270,7 +274,8 @@ export class MemStorage implements IStorage {
         status: "completed",
         inventoredWeight: batch4.totalWeight,
         updatedAt: "2023-09-11 16:45",
-        userId: 1
+        userId: 1,
+        userName: "John Doe"
       });
     }
   }

@@ -13,6 +13,7 @@ export const batches = pgTable("batches", {
   status: text("status").notNull().default("not_started"),
   updatedAt: text("updated_at"),
   userId: integer("user_id"),
+  userName: text("user_name"),
 });
 
 export const users = pgTable("users", {
@@ -29,6 +30,7 @@ export const insertBatchSchema = createInsertSchema(batches).omit({
   status: true,
   updatedAt: true,
   userId: true,
+  userName: true,
 });
 
 export const updateBatchSchema = z.object({
