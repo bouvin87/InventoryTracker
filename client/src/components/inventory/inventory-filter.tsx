@@ -6,19 +6,16 @@ import { useState, useEffect } from "react";
 
 export interface FilterValues {
   status: string;
-  location: string;
   batchNumber: string;
 }
 
 interface InventoryFilterProps {
   onFilter: (filters: FilterValues) => void;
-  locations: string[];
 }
 
-export function InventoryFilter({ onFilter, locations }: InventoryFilterProps) {
+export function InventoryFilter({ onFilter }: InventoryFilterProps) {
   const [filters, setFilters] = useState<FilterValues>({
     status: "all",
-    location: "all",
     batchNumber: "",
   });
 
@@ -39,7 +36,7 @@ export function InventoryFilter({ onFilter, locations }: InventoryFilterProps) {
         <h3 className="text-lg font-medium text-gray-800">Filtrera inventering</h3>
       </div>
       
-      <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <Label htmlFor="status" className="mb-1">Status</Label>
           <Select 
@@ -52,26 +49,8 @@ export function InventoryFilter({ onFilter, locations }: InventoryFilterProps) {
             <SelectContent>
               <SelectItem value="all">Alla statusar</SelectItem>
               <SelectItem value="completed">Inventerad</SelectItem>
-              <SelectItem value="in_progress">Pågående</SelectItem>
+              <SelectItem value="partially_completed">Delvis inventerad</SelectItem>
               <SelectItem value="not_started">Ej påbörjad</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="location" className="mb-1">Lagerplats</Label>
-          <Select 
-            value={filters.location} 
-            onValueChange={(value) => handleFilterChange("location", value)}
-          >
-            <SelectTrigger id="location">
-              <SelectValue placeholder="Alla lagerplatser" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alla lagerplatser</SelectItem>
-              {locations.map((loc) => (
-                <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-              ))}
             </SelectContent>
           </Select>
         </div>

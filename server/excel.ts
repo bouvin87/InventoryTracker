@@ -222,8 +222,8 @@ function translateStatus(status: string): string {
   switch (status) {
     case 'completed':
       return 'Inventerad';
-    case 'in_progress':
-      return 'Pågående';
+    case 'partially_completed':
+      return 'Delvis inventerad';
     case 'not_started':
       return 'Ej påbörjad';
     default:

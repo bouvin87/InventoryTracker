@@ -22,14 +22,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 interface DataTableProps {
   data: BatchItem[];
-  onEdit: (item: BatchItem) => void;
   onView: (item: BatchItem) => void;
-  onStart: (item: BatchItem) => void;
+  onInventoryComplete: (item: BatchItem) => void;
+  onInventoryPartial: (item: BatchItem) => void;
 }
 
 const ITEMS_PER_PAGE = 5;
 
-export function DataTable({ data, onEdit, onView, onStart }: DataTableProps) {
+export function DataTable({ data, onView, onInventoryComplete, onInventoryPartial }: DataTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<keyof BatchItem | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -97,10 +97,10 @@ export function DataTable({ data, onEdit, onView, onStart }: DataTableProps) {
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-800';
-      case 'in_progress':
-        return 'bg-yellow-100 text-yellow-800';
+      case 'partially_completed':
+        return 'bg-blue-100 text-blue-800';
       case 'not_started':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -111,8 +111,8 @@ export function DataTable({ data, onEdit, onView, onStart }: DataTableProps) {
     switch (status) {
       case 'completed':
         return 'Inventerad';
-      case 'in_progress':
-        return 'Pågående';
+      case 'partially_completed':
+        return 'Delvis inventerad';
       case 'not_started':
         return 'Ej påbörjad';
       default:
@@ -143,26 +143,26 @@ export function DataTable({ data, onEdit, onView, onStart }: DataTableProps) {
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('product')}>
-                Produkt
+              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('articleNumber')}>
+                Artikelnummer
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('location')}>
-                Lagerplats
+              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('description')}>
+                Beskrivning
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('expectedQuantity')}>
-                Förväntad mängd
+              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('totalWeight')}>
+                Total vikt
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('actualQuantity')}>
-                Inventerad mängd
+              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('inventoredWeight')}>
+                Inventerad vikt
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
@@ -188,10 +188,10 @@ export function DataTable({ data, onEdit, onView, onStart }: DataTableProps) {
             {paginatedData.map((item) => (
               <TableRow key={item.id} className="hover:bg-gray-50">
                 <TableCell className="font-medium">{item.batchNumber}</TableCell>
-                <TableCell>{item.product}</TableCell>
-                <TableCell>{item.location}</TableCell>
-                <TableCell>{item.expectedQuantity} {item.unit}</TableCell>
-                <TableCell>{item.actualQuantity ? `${item.actualQuantity} ${item.unit}` : '--'}</TableCell>
+                <TableCell>{item.articleNumber}</TableCell>
+                <TableCell>{item.description}</TableCell>
+                <TableCell>{item.totalWeight} kg</TableCell>
+                <TableCell>{item.inventoredWeight !== null ? `${item.inventoredWeight} kg` : '--'}</TableCell>
                 <TableCell>
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(item.status)}`}>
                     {getStatusText(item.status)}
@@ -199,46 +199,50 @@ export function DataTable({ data, onEdit, onView, onStart }: DataTableProps) {
                 </TableCell>
                 <TableCell>{item.updatedAt || '--'}</TableCell>
                 <TableCell className="text-right">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onView(item)}>
-                          <span className="material-icons text-sm">visibility</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Visa</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                  {item.status !== 'not_started' ? (
+                  <div className="flex items-center justify-end gap-1">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-600" onClick={() => onEdit(item)}>
-                            <span className="material-icons text-sm">edit</span>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onView(item)}>
+                            <span className="material-icons text-sm">visibility</span>
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Redigera</p>
+                          <p>Visa</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  ) : (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onStart(item)}>
-                            <span className="material-icons text-sm">play_arrow</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Starta inventering</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
+                    
+                    {item.status === 'not_started' && (
+                      <>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => onInventoryComplete(item)}>
+                                <span className="material-icons text-sm">check_circle</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Inventerat</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onInventoryPartial(item)}>
+                                <span className="material-icons text-sm">indeterminate_check_box</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Inventerat del</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

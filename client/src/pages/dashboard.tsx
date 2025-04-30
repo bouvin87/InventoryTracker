@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
@@ -7,7 +7,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { InventoryFilter, FilterValues } from "@/components/inventory/inventory-filter";
 import { ImportModal } from "@/components/inventory/import-modal";
-import { InventoryModal } from "@/components/inventory/inventory-modal";
+import { PartialInventoryModal } from "@/components/inventory/partial-inventory-modal";
 import { BatchItem, UpdateBatchItem } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -16,12 +16,11 @@ import { useToast } from "@/hooks/use-toast";
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
+  const [isPartialInventoryModalOpen, setIsPartialInventoryModalOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<BatchItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<FilterValues>({
     status: "all",
-    location: "all",
     batchNumber: "",
   });
   
@@ -39,30 +38,23 @@ export default function Dashboard() {
     const searchMatch = 
       !searchTerm || 
       batch.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      batch.product.toLowerCase().includes(searchTerm.toLowerCase());
+      batch.articleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      batch.description.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Status filter
     const statusMatch = filters.status === "all" || batch.status === filters.status;
-    
-    // Location filter
-    const locationMatch = filters.location === "all" || batch.location === filters.location;
     
     // Batch number filter
     const batchNumberMatch = !filters.batchNumber || 
       batch.batchNumber.toLowerCase().includes(filters.batchNumber.toLowerCase());
     
-    return searchMatch && statusMatch && locationMatch && batchNumberMatch;
+    return searchMatch && statusMatch && batchNumberMatch;
   }) || [];
-
-  // Extract unique locations for the filter dropdown
-  const locations = batches
-    ? Array.from(new Set(batches.map(batch => batch.location).filter(Boolean)))
-    : [];
 
   // Calculate statistics
   const totalBatches = filteredBatches.length;
   const completedBatches = filteredBatches.filter(b => b.status === 'completed').length;
-  const inProgressBatches = filteredBatches.filter(b => b.status === 'in_progress').length;
+  const partiallyCompletedBatches = filteredBatches.filter(b => b.status === 'partially_completed').length;
   const notStartedBatches = filteredBatches.filter(b => b.status === 'not_started').length;
   const completionPercentage = totalBatches ? Math.round((completedBatches / totalBatches) * 100) : 0;
 
@@ -141,24 +133,58 @@ export default function Dashboard() {
     }
   };
 
+  // Complete inventory mutation
+  const completeInventoryMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('POST', `/api/batches/${id}/inventory-complete`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
+      toast({
+        title: "Inventering slutförd",
+        description: "Batchen har markerats som inventerad",
+      });
+    },
+  });
+
+  // Partial inventory mutation
+  const partialInventoryMutation = useMutation({
+    mutationFn: async ({ id, weight }: { id: number, weight: number }) => {
+      await apiRequest('POST', `/api/batches/${id}/inventory-partial`, { weight });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
+      toast({
+        title: "Delvis inventering slutförd",
+        description: "Batchen har markerats som delvis inventerad",
+      });
+    },
+  });
+
   // Handle batch actions
   const handleViewBatch = (batch: BatchItem) => {
     setSelectedBatch(batch);
-    setIsInventoryModalOpen(true);
   };
 
-  const handleEditBatch = (batch: BatchItem) => {
+  const handleInventoryComplete = async (batch: BatchItem) => {
+    try {
+      await completeInventoryMutation.mutateAsync(batch.id);
+    } catch (error) {
+      toast({
+        title: "Fel vid inventering",
+        description: "Kunde inte markera batch som inventerad",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInventoryPartial = (batch: BatchItem) => {
     setSelectedBatch(batch);
-    setIsInventoryModalOpen(true);
+    setIsPartialInventoryModalOpen(true);
   };
 
-  const handleStartInventory = (batch: BatchItem) => {
-    setSelectedBatch(batch);
-    setIsInventoryModalOpen(true);
-  };
-
-  const handleSaveBatch = async (id: number, data: UpdateBatchItem) => {
-    await updateBatchMutation.mutateAsync({ id, data });
+  const handleConfirmPartialInventory = async (id: number, weight: number) => {
+    await partialInventoryMutation.mutateAsync({ id, weight });
   };
 
   const handleImportFile = async (file: File, overwrite: boolean) => {
@@ -229,15 +255,15 @@ export default function Dashboard() {
             />
             
             <StatCard
-              icon="pending"
-              iconColor="text-yellow-600"
-              backgroundColor="bg-yellow-100"
-              title="Pågående batches"
-              value={inProgressBatches}
+              icon="indeterminate_check_box"
+              iconColor="text-blue-600"
+              backgroundColor="bg-blue-100"
+              title="Delvis inventerade"
+              value={partiallyCompletedBatches}
             />
             
             <StatCard
-              icon="assignment_late"
+              icon="pending_actions"
               iconColor="text-red-600"
               backgroundColor="bg-red-100"
               title="Ej påbörjade batches"
@@ -246,10 +272,7 @@ export default function Dashboard() {
           </div>
           
           {/* Filters */}
-          <InventoryFilter 
-            onFilter={setFilters}
-            locations={locations}
-          />
+          <InventoryFilter onFilter={setFilters} />
           
           {/* Inventory table */}
           {isLoading ? (
@@ -260,8 +283,8 @@ export default function Dashboard() {
             <DataTable 
               data={filteredBatches}
               onView={handleViewBatch}
-              onEdit={handleEditBatch}
-              onStart={handleStartInventory}
+              onInventoryComplete={handleInventoryComplete}
+              onInventoryPartial={handleInventoryPartial}
             />
           )}
         </div>
@@ -274,11 +297,11 @@ export default function Dashboard() {
         onImport={handleImportFile}
       />
       
-      <InventoryModal
-        isOpen={isInventoryModalOpen}
-        onClose={() => setIsInventoryModalOpen(false)}
+      <PartialInventoryModal
+        isOpen={isPartialInventoryModalOpen}
+        onClose={() => setIsPartialInventoryModalOpen(false)}
         batch={selectedBatch}
-        onSave={handleSaveBatch}
+        onConfirm={handleConfirmPartialInventory}
       />
     </div>
   );
