@@ -61,6 +61,14 @@ export default function Dashboard() {
   const notStartedBatches = filteredBatches.filter(b => b.status === 'not_started').length;
   const completionPercentage = totalBatches ? Math.round((completedBatches / totalBatches) * 100) : 0;
 
+  // Calculate weight statistics
+  const totalWeightToInventory = filteredBatches.reduce((sum, batch) => sum + batch.totalWeight, 0);
+  const totalInventoriedWeight = filteredBatches.reduce((sum, batch) => {
+    return sum + (batch.inventoredWeight !== null ? batch.inventoredWeight : 0);
+  }, 0);
+  const weightDifference = totalInventoriedWeight - totalWeightToInventory;
+  const weightCompletionPercentage = totalWeightToInventory ? Math.round((totalInventoriedWeight / totalWeightToInventory) * 100) : 0;
+
   // Update batch mutation
   const updateBatchMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: UpdateBatchItem }) => {
@@ -338,7 +346,7 @@ export default function Dashboard() {
             {/* Importera och exportera knappar borttagna från huvuddashboard */}
           </div>
           
-          {/* Stats cards */}
+          {/* Stats cards - Batch counts */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <StatCard
               icon="inventory_2"
@@ -372,6 +380,35 @@ export default function Dashboard() {
               backgroundColor="bg-red-100"
               title="Ej påbörjade batches"
               value={notStartedBatches}
+            />
+          </div>
+          
+          {/* Stats cards - Weight statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <StatCard
+              icon="scale"
+              iconColor="text-orange-600"
+              backgroundColor="bg-orange-100"
+              title="Totalt att inventera"
+              value={`${totalWeightToInventory.toFixed(2)} kg`}
+            />
+            
+            <StatCard
+              icon="monitor_weight"
+              iconColor="text-indigo-600"
+              backgroundColor="bg-indigo-100"
+              title="Inventerad vikt"
+              value={`${totalInventoriedWeight.toFixed(2)} kg`}
+              progressValue={weightCompletionPercentage}
+              progressText={`${weightCompletionPercentage}% inventerat`}
+            />
+            
+            <StatCard
+              icon="difference"
+              iconColor={weightDifference >= 0 ? "text-emerald-600" : "text-rose-600"}
+              backgroundColor={weightDifference >= 0 ? "bg-emerald-100" : "bg-rose-100"}
+              title="Differens"
+              value={`${weightDifference >= 0 ? '+' : ''}${weightDifference.toFixed(2)} kg`}
             />
           </div>
           
