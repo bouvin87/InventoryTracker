@@ -18,14 +18,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user (simplified without auth for this example)
   app.get('/api/user', async (req, res) => {
     try {
-      // For now, just return a default user
-      res.json({
-        id: 1,
-        name: "John Doe",
-        role: "Lageransvarig"
-      });
+      // För tillfället, skicka en standardanvändare
+      // Detta kommer att ändras senare för att använda en session-baserad användare
+      const user = await storage.getUser(1);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
     } catch (error) {
       res.status(500).json({ message: "Failed to get user" });
+    }
+  });
+  
+  // Get all users
+  app.get('/api/users', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get users" });
+    }
+  });
+  
+  // Set current user (simplified without auth for this example)
+  app.post('/api/user/select', async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      const user = await storage.getUser(Number(userId));
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // I en riktig applikation skulle vi spara användar-ID i session eller cookie
+      // För denna demo, vi returnerar bara användaren
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to select user" });
     }
   });
 

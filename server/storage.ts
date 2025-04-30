@@ -3,6 +3,7 @@ import { BatchItem, InsertBatch, UpdateBatchItem, User, InsertUser } from "@shar
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   getBatch(id: number): Promise<BatchItem | undefined>;
   getAllBatches(): Promise<BatchItem[]>;
@@ -31,7 +32,7 @@ export class MemStorage implements IStorage {
     this.userCurrentId = 1;
     this.batchCurrentId = 1;
     
-    // Add a default user
+    // Add sample users
     this.users.set(1, {
       id: 1,
       username: "john",
@@ -40,8 +41,38 @@ export class MemStorage implements IStorage {
       role: "Lageransvarig"
     });
     
+    this.users.set(2, {
+      id: 2,
+      username: "anna",
+      password: "password",
+      name: "Anna Svensson",
+      role: "Inventerare"
+    });
+    
+    this.users.set(3, {
+      id: 3,
+      username: "erik",
+      password: "password",
+      name: "Erik Johansson",
+      role: "Inventerare"
+    });
+    
+    this.users.set(4, {
+      id: 4,
+      username: "maria",
+      password: "password",
+      name: "Maria Larsson",
+      role: "Lageransvarig"
+    });
+    
+    this.userCurrentId = 5; // Uppdatera current ID
+    
     // Initialize with some sample data
     this.addSampleData();
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
   }
 
   async getUser(id: number): Promise<User | undefined> {
