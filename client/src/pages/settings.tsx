@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { users, getCurrentUser, setCurrentUser } from "@/lib/userStore";
+import { users, getCurrentUser, setCurrentUser as setGlobalUser } from "@/lib/userStore";
 
 export default function Settings() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -55,20 +55,23 @@ export default function Settings() {
   };
 
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
-  
-  // Hårdkodade användardata istället för att använda useUser
-  const users = [
-    { id: 1, name: "John Doe", role: "Lageransvarig" },
-    { id: 2, name: "Anna Svensson", role: "Inventerare" },
-    { id: 3, name: "Erik Johansson", role: "Inventerare" },
-    { id: 4, name: "Maria Larsson", role: "Lageransvarig" }
-  ];
-  
-  const currentUser = users[currentUserIndex];
+  const [currentUser, setCurrentUser] = useState(getCurrentUser());
+
+  // Uppdatera den lokala state när vi byter användare
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, []);
   
   const handleUserChange = async (userIndexString: string) => {
     const userIndex = parseInt(userIndexString);
     setCurrentUserIndex(userIndex);
+    
+    // Uppdatera global user store - funktionen från userStore
+    setGlobalUser(userIndex);
+    
+    // Uppdatera lokal state med React hook
+    const updatedUser = users[userIndex];
+    setCurrentUser(prevUser => updatedUser);
     
     // Visa ett meddelande efter användarval
     toast({

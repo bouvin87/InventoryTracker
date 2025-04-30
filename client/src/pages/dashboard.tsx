@@ -13,6 +13,7 @@ import { BatchItem, UpdateBatchItem, InsertBatch } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getCurrentUser } from "@/lib/userStore";
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -186,9 +187,19 @@ export default function Dashboard() {
 
   const handleInventoryComplete = async (batch: BatchItem) => {
     try {
+      // Hämta den aktuella användaren
+      const currentUser = getCurrentUser();
+      
       // Vi skickar med location om den finns, annars lämnar vi den odefinierad
-      const payload: { id: number; location?: string } = {
-        id: batch.id
+      const payload: { 
+        id: number; 
+        location?: string;
+        userId: number;
+        userName: string;
+      } = {
+        id: batch.id,
+        userId: currentUser.id,
+        userName: currentUser.name
       };
       
       if (batch.location) {
@@ -211,7 +222,16 @@ export default function Dashboard() {
   };
 
   const handleConfirmPartialInventory = async (id: number, weight: number, location: string) => {
-    await partialInventoryMutation.mutateAsync({ id, weight, location });
+    // Hämta den aktuella användaren
+    const currentUser = getCurrentUser();
+    
+    await partialInventoryMutation.mutateAsync({ 
+      id, 
+      weight, 
+      location,
+      userId: currentUser.id,
+      userName: currentUser.name 
+    });
   };
 
   const handleImportFile = async (file: File, overwrite: boolean) => {
