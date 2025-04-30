@@ -109,6 +109,18 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
             {showLocation ? "Dölj lagerplats" : "Visa lagerplats"}
           </Button>
           
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-9 px-3"
+            onClick={() => setShowUser(!showUser)}
+          >
+            <span className="material-icons mr-1 text-sm">
+              {showUser ? "visibility_off" : "visibility"}
+            </span>
+            {showUser ? "Dölj användare" : "Visa användare"}
+          </Button>
+          
           <Button variant="outline" size="sm" className="h-9 px-3">
             <span className="material-icons mr-1 text-sm">refresh</span>
             Uppdatera
@@ -164,6 +176,14 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
+              {showUser && (
+                <TableHead className="whitespace-nowrap" onClick={() => toggleSort('userName')}>
+                  Användare
+                  <button className="ml-1 text-gray-400">
+                    <span className="material-icons text-sm">unfold_more</span>
+                  </button>
+                </TableHead>
+              )}
               <TableHead className="text-right whitespace-nowrap">
                 Åtgärder
               </TableHead>
@@ -194,6 +214,11 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                     {getStatusText(item.status)}
                   </span>
                 </TableCell>
+                {showUser && (
+                  <TableCell>
+                    {item.userName || '--'}
+                  </TableCell>
+                )}
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     
