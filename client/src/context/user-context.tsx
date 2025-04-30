@@ -11,6 +11,13 @@ export interface User {
   username?: string;
 }
 
+export interface CreateUserData {
+  username: string;
+  name: string;
+  password: string;
+  role: string;
+}
+
 interface UserContextType {
   user: User | null;
   isLoading: boolean;
@@ -18,6 +25,8 @@ interface UserContextType {
   areAllUsersLoading: boolean;
   selectUser: (userId: number) => Promise<void>;
   isSelecting: boolean;
+  createUser: (userData: CreateUserData) => Promise<void>;
+  isCreatingUser: boolean;
 }
 
 const UserContext = createContext<UserContextType>({
@@ -27,6 +36,8 @@ const UserContext = createContext<UserContextType>({
   areAllUsersLoading: true,
   selectUser: async () => {},
   isSelecting: false,
+  createUser: async () => {},
+  isCreatingUser: false,
 });
 
 export function UserProvider({ children }: { children: ReactNode }) {
@@ -72,9 +83,38 @@ export function UserProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Mutation för att skapa användare
+  const {
+    mutateAsync: createUserMutation,
+    isPending: isCreatingUser,
+  } = useMutation({
+    mutationFn: async (userData: CreateUserData) => {
+      return apiRequest<User>('POST', '/api/users', userData);
+    },
+    onSuccess: (newUser) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({
+        title: "Användare skapad",
+        description: `Användare ${newUser.name} har skapats`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fel vid skapande av användare",
+        description: error instanceof Error ? error.message : "Kunde inte skapa användare",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Funktion för att välja användare
   const selectUser = async (userId: number) => {
     await selectUserMutation(userId);
+  };
+  
+  // Funktion för att skapa användare
+  const createUser = async (userData: CreateUserData) => {
+    await createUserMutation(userData);
   };
 
   const value = {
@@ -84,6 +124,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     areAllUsersLoading,
     selectUser,
     isSelecting,
+    createUser,
+    isCreatingUser,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

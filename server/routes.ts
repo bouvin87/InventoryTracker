@@ -61,6 +61,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to select user" });
     }
   });
+  
+  // Add a new user
+  app.post('/api/users', async (req, res) => {
+    try {
+      const { username, name, password, role } = req.body;
+      
+      if (!username || !name || !password || !role) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+      
+      // Kontrollera om användaren redan finns
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Skapa ny användare
+      const newUser = await storage.createUser({
+        username,
+        name,
+        password,
+        role
+      });
+      
+      res.status(201).json(newUser);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
 
   // Clear all batches
   app.delete('/api/batches', async (req, res) => {

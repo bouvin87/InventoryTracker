@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/user-context";
+import { UserForm } from "@/components/user/user-form";
 
 export default function Settings() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -124,6 +125,19 @@ export default function Settings() {
                     </Select>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+            
+            {/* Create user section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Skapa användare</CardTitle>
+                <CardDescription>
+                  Lägg till en ny användare i systemet
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserForm />
               </CardContent>
             </Card>
             
