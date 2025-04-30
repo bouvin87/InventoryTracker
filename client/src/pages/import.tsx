@@ -141,7 +141,7 @@ export default function Import() {
                   Excel-import
                 </CardTitle>
                 <CardDescription>
-                  Ladda upp en Excel-fil med batchdata. Filen ska innehålla kolumner för batchnummer, produkt, lagerplats, förväntad mängd och enhet.
+                  Ladda upp en Excel-fil med batchdata. Filen ska innehålla kolumner för batchnummer, artikelnummer, beskrivning, lagerplats och totalvikt.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -225,33 +225,33 @@ export default function Import() {
                         batchNumber
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        product
+                        articleNumber
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        description
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         location
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        expectedQuantity
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        unit
+                        totalWeight
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">BAT-2023-1001</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kopplingsdon KP-45</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">A12345</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">45678</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mässingdetalj</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">A-12-5</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">250</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">st</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">100</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">BAT-2023-1002</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Skruvset SK-100</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">B-04-2</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">B67890</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">67890</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kopparhylsa</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">B-05-3</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">500</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">st</td>
                     </tr>
                   </tbody>
                 </table>

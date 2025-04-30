@@ -17,7 +17,7 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
     const headers = data[0].map((h: string) => h.trim().toLowerCase());
     
     // Check required columns
-    const requiredColumns = ['batchnumber', 'articlenumber', 'description', 'totalweight'];
+    const requiredColumns = ['batchnumber', 'articlenumber', 'description', 'totalweight', 'location'];
     const missingColumns = requiredColumns.filter(col => !headers.includes(col));
     
     if (missingColumns.length > 0) {
@@ -58,7 +58,7 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
       
       // Validate required fields
       if (!batch.batchNumber || !batch.articleNumber || !batch.description || 
-          batch.totalWeight === undefined) {
+          batch.totalWeight === undefined || !batch.location) {
         continue; // Skip rows with missing required fields
       }
       
