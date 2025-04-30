@@ -17,7 +17,7 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
     const headers = data[0].map((h: string) => h.trim().toLowerCase());
     
     // Check required columns
-    const requiredColumns = ['batchnumber', 'product', 'location', 'expectedquantity', 'unit'];
+    const requiredColumns = ['batchnumber', 'articlenumber', 'description', 'totalweight'];
     const missingColumns = requiredColumns.filter(col => !headers.includes(col));
     
     if (missingColumns.length > 0) {
@@ -45,10 +45,11 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
         
         // Convert header to camelCase (e.g., batchnumber to batchNumber)
         const prop = header === 'batchnumber' ? 'batchNumber' :
-                    header === 'expectedquantity' ? 'expectedQuantity' : header;
+                    header === 'articlenumber' ? 'articleNumber' :
+                    header === 'totalweight' ? 'totalWeight' : header;
         
-        // Parse numbers for quantity fields
-        if (prop === 'expectedQuantity') {
+        // Parse numbers for weight fields
+        if (prop === 'totalWeight') {
           batch[prop] = typeof value === 'number' ? value : parseInt(value);
         } else {
           batch[prop] = value;
@@ -56,8 +57,8 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
       }
       
       // Validate required fields
-      if (!batch.batchNumber || !batch.product || !batch.location || 
-          batch.expectedQuantity === undefined || !batch.unit) {
+      if (!batch.batchNumber || !batch.articleNumber || !batch.description || 
+          batch.totalWeight === undefined) {
         continue; // Skip rows with missing required fields
       }
       
@@ -98,20 +99,18 @@ function generateStandardExcel(batches: BatchItem[]): Buffer {
   
   // Prepare data for the worksheet
   const wsData = [
-    ['Batchnummer', 'Produkt', 'Lagerplats', 'Förväntad mängd', 'Enhet', 'Inventerad mängd', 'Status', 'Anteckningar', 'Senast uppdaterad']
+    ['Batchnummer', 'Artikelnummer', 'Beskrivning', 'Total vikt', 'Inventerad vikt', 'Status', 'Senast uppdaterad']
   ];
   
   // Add batch data
   batches.forEach(batch => {
     wsData.push([
       batch.batchNumber,
-      batch.product,
-      batch.location,
-      batch.expectedQuantity,
-      batch.unit,
-      batch.actualQuantity || '',
+      batch.articleNumber,
+      batch.description,
+      batch.totalWeight,
+      batch.inventoredWeight !== null ? batch.inventoredWeight : '',
       translateStatus(batch.status),
-      batch.notes || '',
       batch.updatedAt || ''
     ]);
   });
@@ -137,7 +136,7 @@ function generateSummaryExcel(batches: BatchItem[]): Buffer {
     ['', ''],
     ['Antal batches', batches.length],
     ['Inventerade', batches.filter(b => b.status === 'completed').length],
-    ['Pågående', batches.filter(b => b.status === 'in_progress').length],
+    ['Delvis inventerade', batches.filter(b => b.status === 'partially_completed').length],
     ['Ej påbörjade', batches.filter(b => b.status === 'not_started').length],
     ['', ''],
     ['Status', 'Antal']
@@ -146,7 +145,7 @@ function generateSummaryExcel(batches: BatchItem[]): Buffer {
   // Count batches by status
   const statusCounts = {
     completed: 0,
-    in_progress: 0,
+    partially_completed: 0,
     not_started: 0
   };
   
@@ -157,7 +156,7 @@ function generateSummaryExcel(batches: BatchItem[]): Buffer {
   });
   
   summaryData.push(['Inventerad', statusCounts.completed]);
-  summaryData.push(['Pågående', statusCounts.in_progress]);
+  summaryData.push(['Delvis inventerad', statusCounts.partially_completed]);
   summaryData.push(['Ej påbörjad', statusCounts.not_started]);
   
   const summaryWs = utils.aoa_to_sheet(summaryData);
@@ -180,7 +179,7 @@ function generateDetailedExcel(batches: BatchItem[]): Buffer {
     ['', ''],
     ['Antal batches', batches.length],
     ['Inventerade', batches.filter(b => b.status === 'completed').length],
-    ['Pågående', batches.filter(b => b.status === 'in_progress').length],
+    ['Delvis inventerade', batches.filter(b => b.status === 'partially_completed').length],
     ['Ej påbörjade', batches.filter(b => b.status === 'not_started').length]
   ];
   
@@ -189,25 +188,23 @@ function generateDetailedExcel(batches: BatchItem[]): Buffer {
   
   // Detailed data worksheet
   const detailedData = [
-    ['Batchnummer', 'Produkt', 'Lagerplats', 'Förväntad mängd', 'Enhet', 'Inventerad mängd', 'Avvikelse', 'Status', 'Anteckningar', 'Senast uppdaterad']
+    ['Batchnummer', 'Artikelnummer', 'Beskrivning', 'Total vikt', 'Inventerad vikt', 'Avvikelse', 'Status', 'Senast uppdaterad']
   ];
   
   // Add batch data with calculated discrepancies
   batches.forEach(batch => {
-    const expected = batch.expectedQuantity;
-    const actual = batch.actualQuantity;
-    const discrepancy = actual !== null ? actual - expected : '';
+    const totalWeight = batch.totalWeight;
+    const inventoredWeight = batch.inventoredWeight;
+    const discrepancy = inventoredWeight !== null ? inventoredWeight - totalWeight : '';
     
     detailedData.push([
       batch.batchNumber,
-      batch.product,
-      batch.location,
-      expected,
-      batch.unit,
-      actual !== null ? actual : '',
+      batch.articleNumber,
+      batch.description,
+      totalWeight,
+      inventoredWeight !== null ? inventoredWeight : '',
       discrepancy,
       translateStatus(batch.status),
-      batch.notes || '',
       batch.updatedAt || ''
     ]);
   });

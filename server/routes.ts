@@ -76,6 +76,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update batch" });
     }
   });
+  
+  // Mark batch as inventoried (fully)
+  app.post('/api/batches/:id/inventoried', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getBatch(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "Batch not found" });
+      }
+      
+      const updatedBatch = await storage.markBatchAsInventored(id);
+      res.json(updatedBatch);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark batch as inventoried" });
+    }
+  });
+  
+  // Mark batch as partially inventoried
+  app.post('/api/batches/:id/partially-inventoried', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getBatch(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "Batch not found" });
+      }
+      
+      // Validate weight from request body
+      const schema = z.object({
+        weight: z.number().min(0)
+      });
+      
+      const { weight } = schema.parse(req.body);
+      
+      const updatedBatch = await storage.markBatchAsPartiallyInventored(id, weight);
+      res.json(updatedBatch);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid weight value", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to mark batch as partially inventoried" });
+    }
+  });
 
   // Import Excel file
   app.post('/api/import', upload.single('file'), async (req, res) => {
