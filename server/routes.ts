@@ -177,11 +177,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate request body
       const schema = z.object({
-        location: z.string().optional()
+        location: z.string().optional(),
+        userId: z.number().optional(),
+        userName: z.string().optional()
       });
       
       // Parse body even if it's empty
-      const { location } = schema.parse(req.body || {});
+      const { location, userId, userName } = schema.parse(req.body || {});
       
       // First update the location if provided
       if (location) {
@@ -192,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const updatedBatch = await storage.markBatchAsInventored(id);
+      const updatedBatch = await storage.markBatchAsInventored(id, userId, userName);
       res.json(updatedBatch);
     } catch (error) {
       console.error("Error marking batch as inventoried:", error);
@@ -233,10 +235,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate weight and location from request body
       const schema = z.object({
         weight: z.number().min(0),
-        location: z.string().optional()
+        location: z.string().optional(),
+        userId: z.number().optional(),
+        userName: z.string().optional()
       });
       
-      const { weight, location } = schema.parse(req.body);
+      const { weight, location, userId, userName } = schema.parse(req.body);
       console.log(`Marking batch ${id} as partially inventoried with weight ${weight} and location ${location || 'not specified'}`);
       
       // First update the location if provided
@@ -248,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const updatedBatch = await storage.markBatchAsPartiallyInventored(id, weight);
+      const updatedBatch = await storage.markBatchAsPartiallyInventored(id, weight, userId, userName);
       res.json(updatedBatch);
     } catch (error) {
       console.error("Error marking batch as partially inventoried:", error);

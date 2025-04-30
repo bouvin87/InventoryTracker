@@ -9,8 +9,8 @@ export interface IStorage {
   getAllBatches(): Promise<BatchItem[]>;
   createBatch(batch: InsertBatch): Promise<BatchItem>;
   updateBatch(id: number, data: UpdateBatchItem): Promise<BatchItem>;
-  markBatchAsInventored(id: number): Promise<BatchItem>;
-  markBatchAsPartiallyInventored(id: number, weight: number): Promise<BatchItem>;
+  markBatchAsInventored(id: number, userId?: number, userName?: string): Promise<BatchItem>;
+  markBatchAsPartiallyInventored(id: number, weight: number, userId?: number, userName?: string): Promise<BatchItem>;
   importBatches(batches: InsertBatch[], overwrite: boolean): Promise<BatchItem[]>;
   clearAllBatches(): Promise<void>;
 }
@@ -126,7 +126,7 @@ export class MemStorage implements IStorage {
     return updatedBatch;
   }
   
-  async markBatchAsInventored(id: number): Promise<BatchItem> {
+  async markBatchAsInventored(id: number, userId?: number, userName?: string): Promise<BatchItem> {
     const batch = this.batches.get(id);
     if (!batch) {
       throw new Error(`Batch with id ${id} not found`);
@@ -136,13 +136,15 @@ export class MemStorage implements IStorage {
       ...batch, 
       status: "completed", 
       inventoredWeight: batch.totalWeight, 
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      userId: userId || null,
+      userName: userName || null
     };
     this.batches.set(id, updatedBatch);
     return updatedBatch;
   }
   
-  async markBatchAsPartiallyInventored(id: number, weight: number): Promise<BatchItem> {
+  async markBatchAsPartiallyInventored(id: number, weight: number, userId?: number, userName?: string): Promise<BatchItem> {
     const batch = this.batches.get(id);
     if (!batch) {
       throw new Error(`Batch with id ${id} not found`);
@@ -152,7 +154,9 @@ export class MemStorage implements IStorage {
       ...batch, 
       status: "partially_completed", 
       inventoredWeight: weight, 
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      userId: userId || null,
+      userName: userName || null
     };
     this.batches.set(id, updatedBatch);
     return updatedBatch;
