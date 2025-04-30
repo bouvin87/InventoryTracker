@@ -1,0 +1,289 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Sidebar } from "@/components/layout/sidebar";
+import { TopBar } from "@/components/layout/top-bar";
+import { StatCard } from "@/components/ui/stat-card";
+import { DataTable } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
+import { InventoryFilter, FilterValues } from "@/components/inventory/inventory-filter";
+import { ImportModal } from "@/components/inventory/import-modal";
+import { InventoryModal } from "@/components/inventory/inventory-modal";
+import { BatchItem, UpdateBatchItem } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+export default function Dashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<BatchItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<FilterValues>({
+    status: "all",
+    location: "all",
+    batchNumber: "",
+  });
+  
+  const { toast } = useToast();
+
+  // Fetch inventory data
+  const { data: batches, isLoading } = useQuery({
+    queryKey: ['/api/batches'],
+    select: (data: BatchItem[]) => data || [],
+  });
+
+  // Filter data based on search term and filters
+  const filteredBatches = batches?.filter(batch => {
+    // Search filter
+    const searchMatch = 
+      !searchTerm || 
+      batch.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      batch.product.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Status filter
+    const statusMatch = filters.status === "all" || batch.status === filters.status;
+    
+    // Location filter
+    const locationMatch = filters.location === "all" || batch.location === filters.location;
+    
+    // Batch number filter
+    const batchNumberMatch = !filters.batchNumber || 
+      batch.batchNumber.toLowerCase().includes(filters.batchNumber.toLowerCase());
+    
+    return searchMatch && statusMatch && locationMatch && batchNumberMatch;
+  }) || [];
+
+  // Extract unique locations for the filter dropdown
+  const locationsSet = new Set<string>();
+  batches?.forEach(batch => {
+    if (batch.location) {
+      locationsSet.add(batch.location);
+    }
+  });
+  const locations = Array.from(locationsSet);
+
+  // Calculate statistics
+  const totalBatches = filteredBatches.length;
+  const completedBatches = filteredBatches.filter(b => b.status === 'completed').length;
+  const inProgressBatches = filteredBatches.filter(b => b.status === 'in_progress').length;
+  const notStartedBatches = filteredBatches.filter(b => b.status === 'not_started').length;
+  const completionPercentage = totalBatches ? Math.round((completedBatches / totalBatches) * 100) : 0;
+
+  // Update batch mutation
+  const updateBatchMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: UpdateBatchItem }) => {
+      await apiRequest('PUT', `/api/batches/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
+    },
+  });
+
+  // Import batches mutation
+  const importBatchesMutation = useMutation({
+    mutationFn: async ({ file, overwrite }: { file: File, overwrite: boolean }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('overwrite', overwrite.toString());
+      
+      // Use fetch directly since apiRequest doesn't support FormData
+      const response = await fetch('/api/import', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || response.statusText);
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
+      toast({
+        title: "Import lyckades",
+        description: "Batchdata har importerats framgångsrikt",
+      });
+    },
+  });
+
+  // Export batches
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/export', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+      
+      // Create a download link for the Excel file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inventory_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export lyckades",
+        description: "Inventeringsdata har exporterats till Excel",
+      });
+    } catch (error) {
+      toast({
+        title: "Export misslyckades",
+        description: "Kunde inte exportera data till Excel",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle batch actions
+  const handleViewBatch = (batch: BatchItem) => {
+    setSelectedBatch(batch);
+    setIsInventoryModalOpen(true);
+  };
+
+  const handleEditBatch = (batch: BatchItem) => {
+    setSelectedBatch(batch);
+    setIsInventoryModalOpen(true);
+  };
+
+  const handleStartInventory = (batch: BatchItem) => {
+    setSelectedBatch(batch);
+    setIsInventoryModalOpen(true);
+  };
+
+  const handleSaveBatch = async (id: number, data: UpdateBatchItem) => {
+    await updateBatchMutation.mutateAsync({ id, data });
+  };
+
+  const handleImportFile = async (file: File, overwrite: boolean) => {
+    await importBatchesMutation.mutateAsync({ file, overwrite });
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      
+      {/* Mobile sidebar toggle */}
+      <div className="md:hidden fixed bottom-4 right-4 z-20">
+        <Button
+          onClick={() => setIsSidebarOpen(true)}
+          className="bg-primary text-white p-3 rounded-full shadow-lg flex items-center justify-center h-12 w-12"
+        >
+          <span className="material-icons">menu</span>
+        </Button>
+      </div>
+      
+      <main className="flex-1 overflow-y-auto bg-gray-50 pb-10">
+        <TopBar 
+          toggleSidebar={() => setIsSidebarOpen(true)} 
+          onSearch={setSearchTerm}
+        />
+        
+        <div className="px-6 py-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800">Batchinventering</h2>
+            
+            <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
+              <Button 
+                onClick={() => setIsImportModalOpen(true)}
+                className="bg-primary text-white"
+              >
+                <span className="material-icons mr-2 text-sm">upload_file</span>
+                Importera batch
+              </Button>
+              
+              <Button 
+                onClick={handleExport}
+                className="bg-green-600 text-white hover:bg-green-700"
+              >
+                <span className="material-icons mr-2 text-sm">download</span>
+                Exportera resultat
+              </Button>
+            </div>
+          </div>
+          
+          {/* Stats cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <StatCard
+              icon="inventory_2"
+              iconColor="text-primary"
+              backgroundColor="bg-primary-100"
+              title="Totalt antal batches"
+              value={totalBatches}
+            />
+            
+            <StatCard
+              icon="check_circle"
+              iconColor="text-green-600"
+              backgroundColor="bg-green-100"
+              title="Inventerade batches"
+              value={completedBatches}
+              progressValue={completionPercentage}
+              progressText={`${completionPercentage}% klart`}
+            />
+            
+            <StatCard
+              icon="pending"
+              iconColor="text-yellow-600"
+              backgroundColor="bg-yellow-100"
+              title="Pågående batches"
+              value={inProgressBatches}
+            />
+            
+            <StatCard
+              icon="assignment_late"
+              iconColor="text-red-600"
+              backgroundColor="bg-red-100"
+              title="Ej påbörjade batches"
+              value={notStartedBatches}
+            />
+          </div>
+          
+          {/* Filters */}
+          <InventoryFilter 
+            onFilter={setFilters}
+            locations={locations}
+          />
+          
+          {/* Inventory table */}
+          {isLoading ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center">
+              Laddar inventeringsdata...
+            </div>
+          ) : (
+            <DataTable 
+              data={filteredBatches}
+              onView={handleViewBatch}
+              onEdit={handleEditBatch}
+              onStart={handleStartInventory}
+            />
+          )}
+        </div>
+      </main>
+      
+      {/* Modals */}
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportFile}
+      />
+      
+      <InventoryModal
+        isOpen={isInventoryModalOpen}
+        onClose={() => setIsInventoryModalOpen(false)}
+        batch={selectedBatch}
+        onSave={handleSaveBatch}
+      />
+    </div>
+  );
+}

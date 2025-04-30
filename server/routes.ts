@@ -1,0 +1,166 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { parseExcel, generateExcel } from "./excel";
+import { insertBatchSchema, updateBatchSchema } from "@shared/schema";
+import multer from "multer";
+import { z } from "zod";
+
+// Configure multer for file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Get current user (simplified without auth for this example)
+  app.get('/api/user', async (req, res) => {
+    try {
+      // For now, just return a default user
+      res.json({
+        id: 1,
+        name: "John Doe",
+        role: "Lageransvarig"
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user" });
+    }
+  });
+
+  // Get all batches
+  app.get('/api/batches', async (req, res) => {
+    try {
+      const batches = await storage.getAllBatches();
+      res.json(batches);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get batches" });
+    }
+  });
+
+  // Get batch by ID
+  app.get('/api/batches/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getBatch(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "Batch not found" });
+      }
+      
+      res.json(batch);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get batch" });
+    }
+  });
+
+  // Update batch
+  app.put('/api/batches/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getBatch(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "Batch not found" });
+      }
+      
+      const validatedData = updateBatchSchema.parse(req.body);
+      
+      const updatedBatch = await storage.updateBatch(id, validatedData);
+      res.json(updatedBatch);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update batch" });
+    }
+  });
+
+  // Import Excel file
+  app.post('/api/import', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const overwrite = req.body.overwrite === 'true';
+      
+      const batches = await parseExcel(req.file.buffer);
+      
+      // Validate batch data
+      const validBatches = [];
+      for (const batch of batches) {
+        try {
+          const validatedBatch = insertBatchSchema.parse(batch);
+          validBatches.push(validatedBatch);
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            return res.status(400).json({ 
+              message: "Invalid data in Excel file", 
+              errors: error.errors,
+              row: batches.indexOf(batch) + 2 // +2 to account for header row and 0-indexing
+            });
+          }
+          throw error;
+        }
+      }
+      
+      // Store batches
+      await storage.importBatches(validBatches, overwrite);
+      
+      res.json({ message: "Import successful", count: validBatches.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to import Excel file", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // Parse Excel file without importing
+  app.post('/api/parse-excel', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const batches = await parseExcel(req.file.buffer);
+      res.json(batches);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to parse Excel file", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // Export to Excel
+  app.get('/api/export', async (req, res) => {
+    try {
+      const type = req.query.type as string || 'all';
+      
+      // Parse status filters
+      let statuses: string[] | undefined;
+      if (req.query.status) {
+        if (Array.isArray(req.query.status)) {
+          statuses = req.query.status as string[];
+        } else {
+          statuses = [req.query.status as string];
+        }
+      }
+      
+      const batches = await storage.getAllBatches();
+      
+      // Filter batches by status if requested
+      const filteredBatches = statuses 
+        ? batches.filter(batch => statuses!.includes(batch.status))
+        : batches;
+      
+      const excelBuffer = await generateExcel(filteredBatches, type);
+      
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename=inventory_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+      res.send(excelBuffer);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to export Excel file", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
