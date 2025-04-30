@@ -91,7 +91,7 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden" style={{ maxWidth: '100%' }}>
       <div className="p-4 border-b flex justify-between items-center">
         <h3 className="text-lg font-medium text-gray-800">Inventeringslista</h3>
         
@@ -115,8 +115,8 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <Table>
+      <div className="overflow-x-auto" style={{ overflowX: 'scroll' }}>
+        <Table className="min-w-full w-max">
           <TableHeader className="bg-gray-50">
             <TableRow>
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('articleNumber')}>
