@@ -7,6 +7,7 @@ export const batches = pgTable("batches", {
   batchNumber: text("batch_number").notNull().unique(),
   articleNumber: text("article_number").notNull(),
   description: text("description").notNull(),
+  location: text("location"),
   totalWeight: integer("total_weight").notNull(),
   inventoredWeight: integer("inventored_weight"),
   status: text("status").notNull().default("not_started"),
@@ -31,6 +32,7 @@ export const insertBatchSchema = createInsertSchema(batches).omit({
 });
 
 export const updateBatchSchema = z.object({
+  location: z.string().optional(),
   inventoredWeight: z.number().optional(),
   status: z.string(),
   updatedAt: z.string(),

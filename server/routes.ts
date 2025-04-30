@@ -78,6 +78,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Mark batch as inventoried (fully)
+  app.post('/api/batches/:id/inventory-complete', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getBatch(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "Batch not found" });
+      }
+      
+      const updatedBatch = await storage.markBatchAsInventored(id);
+      res.json(updatedBatch);
+    } catch (error) {
+      console.error("Error marking batch as inventoried:", error);
+      res.status(500).json({ message: "Failed to mark batch as inventoried" });
+    }
+  });
+  
+  // Keep the old endpoint for backward compatibility
   app.post('/api/batches/:id/inventoried', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -95,6 +113,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Mark batch as partially inventoried
+  app.post('/api/batches/:id/inventory-partial', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getBatch(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "Batch not found" });
+      }
+      
+      // Validate weight from request body
+      const schema = z.object({
+        weight: z.number().min(0)
+      });
+      
+      const { weight } = schema.parse(req.body);
+      console.log(`Marking batch ${id} as partially inventoried with weight ${weight}`);
+      
+      const updatedBatch = await storage.markBatchAsPartiallyInventored(id, weight);
+      res.json(updatedBatch);
+    } catch (error) {
+      console.error("Error marking batch as partially inventoried:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid weight value", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to mark batch as partially inventoried" });
+    }
+  });
+  
+  // Keep the old endpoint for backward compatibility
   app.post('/api/batches/:id/partially-inventoried', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
