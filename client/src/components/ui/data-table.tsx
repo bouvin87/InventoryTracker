@@ -23,6 +23,7 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
   const [sortField, setSortField] = useState<keyof BatchItem | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [showLocation, setShowLocation] = useState<boolean>(true);
+  const [showUser, setShowUser] = useState<boolean>(true);
 
   // Handle sorting
   const toggleSort = (field: string) => {
