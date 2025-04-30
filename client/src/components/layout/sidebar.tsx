@@ -89,7 +89,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </Link>
         
         <Link href="/help">
-          <div className="flex items-center px-4 py-2.5 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 mt-1 cursor-pointer">
+          <div className={cn(
+            "flex items-center px-4 py-2.5 text-sm font-medium rounded-md mt-1 cursor-pointer",
+            isActive("/help") 
+              ? "bg-primary-50 text-primary-700" 
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          )}>
             <span className="material-icons text-gray-500 mr-3 text-lg">help_outline</span>
             Hjälp
           </div>
