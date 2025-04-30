@@ -106,12 +106,6 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
         <Table>
           <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('batchNumber')}>
-                Batchnummer
-                <button className="ml-1 text-gray-400">
-                  <span className="material-icons text-sm">unfold_more</span>
-                </button>
-              </TableHead>
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('articleNumber')}>
                 Artikelnummer
                 <button className="ml-1 text-gray-400">
@@ -130,8 +124,14 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
+              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('batchNumber')}>
+                Batchnummer
+                <button className="ml-1 text-gray-400">
+                  <span className="material-icons text-sm">unfold_more</span>
+                </button>
+              </TableHead>
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('totalWeight')}>
-                Total vikt
+                Totalt saldo
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
@@ -148,12 +148,6 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('updatedAt')}>
-                Senast uppdaterad
-                <button className="ml-1 text-gray-400">
-                  <span className="material-icons text-sm">unfold_more</span>
-                </button>
-              </TableHead>
               <TableHead className="text-right whitespace-nowrap">
                 Åtgärder
               </TableHead>
@@ -162,10 +156,10 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
           <TableBody>
             {sortedData.map((item) => (
               <TableRow key={item.id} className="hover:bg-gray-50">
-                <TableCell className="font-medium">{item.batchNumber}</TableCell>
-                <TableCell>{item.articleNumber}</TableCell>
+                <TableCell className="font-medium">{item.articleNumber}</TableCell>
                 <TableCell>{item.description}</TableCell>
                 <TableCell>{item.location || '--'}</TableCell>
+                <TableCell>{item.batchNumber}</TableCell>
                 <TableCell>{item.totalWeight} kg</TableCell>
                 <TableCell>
                   {item.inventoredWeight !== null ? (
@@ -184,7 +178,6 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                     {getStatusText(item.status)}
                   </span>
                 </TableCell>
-                <TableCell>{item.updatedAt || '--'}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <TooltipProvider>

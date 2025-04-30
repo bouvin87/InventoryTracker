@@ -146,20 +146,19 @@ function generateStandardExcel(batches: BatchItem[]): Buffer {
   
   // Prepare data for the worksheet
   const wsData = [
-    ['Batchnummer', 'Artikelnummer', 'Beskrivning', 'Lagerplats', 'Total vikt', 'Inventerad vikt', 'Status', 'Senast uppdaterad']
+    ['Artikelnummer', 'Beskrivning', 'Lagerplats', 'Batchnummer', 'Totalt saldo', 'Inventerad vikt', 'Status']
   ];
   
   // Add batch data
   batches.forEach(batch => {
     wsData.push([
-      batch.batchNumber,
       batch.articleNumber,
       batch.description,
       batch.location || '',
+      batch.batchNumber,
       batch.totalWeight.toString(),
       batch.inventoredWeight !== null ? batch.inventoredWeight.toString() : '',
-      translateStatus(batch.status),
-      batch.updatedAt || ''
+      translateStatus(batch.status)
     ]);
   });
   
@@ -236,7 +235,7 @@ function generateDetailedExcel(batches: BatchItem[]): Buffer {
   
   // Detailed data worksheet
   const detailedData = [
-    ['Batchnummer', 'Artikelnummer', 'Beskrivning', 'Lagerplats', 'Total vikt', 'Inventerad vikt', 'Avvikelse', 'Status', 'Senast uppdaterad']
+    ['Artikelnummer', 'Beskrivning', 'Lagerplats', 'Batchnummer', 'Totalt saldo', 'Inventerad vikt', 'Avvikelse', 'Status']
   ];
   
   // Add batch data with calculated discrepancies
@@ -246,15 +245,14 @@ function generateDetailedExcel(batches: BatchItem[]): Buffer {
     const discrepancy = inventoredWeight !== null ? inventoredWeight - totalWeight : '';
     
     detailedData.push([
-      batch.batchNumber,
       batch.articleNumber,
       batch.description,
       batch.location || '',
+      batch.batchNumber,
       totalWeight.toString(),
       inventoredWeight !== null ? inventoredWeight.toString() : '',
       discrepancy !== '' ? discrepancy.toString() : '',
-      translateStatus(batch.status),
-      batch.updatedAt || ''
+      translateStatus(batch.status)
     ]);
   });
   
