@@ -77,7 +77,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
         
         <Link href="/settings">
-          <div className="flex items-center px-4 py-2.5 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer">
+          <div className={cn(
+            "flex items-center px-4 py-2.5 text-sm font-medium rounded-md cursor-pointer",
+            isActive("/settings") 
+              ? "bg-primary-50 text-primary-700" 
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          )}>
             <span className="material-icons text-gray-500 mr-3 text-lg">settings</span>
             Inställningar
           </div>

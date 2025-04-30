@@ -98,44 +98,7 @@ export default function Dashboard() {
     },
   });
 
-  // Clear all batches
-  const clearAllBatchesMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/batches', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to clear batches');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
-      toast({
-        title: "Rensning klar",
-        description: "Alla artiklar har rensats från listan",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Rensning misslyckades",
-        description: "Det gick inte att rensa artiklarna",
-        variant: "destructive",
-      });
-    }
-  });
   
-  const handleClearAll = () => {
-    if (window.confirm('Är du säker på att du vill rensa hela listan? Denna åtgärd kan inte ångras.')) {
-      clearAllBatchesMutation.mutate();
-    }
-  };
 
   // Export batches
   const handleExport = async () => {
@@ -304,14 +267,6 @@ export default function Dashboard() {
               >
                 <span className="material-icons mr-2 text-sm">download</span>
                 Exportera resultat
-              </Button>
-              
-              <Button 
-                onClick={handleClearAll}
-                className="bg-red-600 text-white hover:bg-red-700"
-              >
-                <span className="material-icons mr-2 text-sm">delete_sweep</span>
-                Rensa alla
               </Button>
             </div>
           </div>

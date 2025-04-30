@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Import from "@/pages/import";
 import Export from "@/pages/export";
+import Settings from "@/pages/settings";
 import { useEffect, useState } from "react";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/import" component={Import} />
       <Route path="/export" component={Export} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );
