@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { StatCard } from "@/components/ui/stat-card";
+import { BatchStatsCard } from "@/components/ui/batch-stats-card";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { InventoryFilter, FilterValues } from "@/components/inventory/inventory-filter";
@@ -347,70 +348,49 @@ export default function Dashboard() {
           </div>
           
           {/* Stats cards - Batch counts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <StatCard
-              icon="inventory_2"
-              iconColor="text-primary"
-              backgroundColor="bg-primary-100"
-              title="Totalt antal batches"
-              value={totalBatches}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div className="md:col-span-1">
+              <BatchStatsCard
+                totalBatches={totalBatches}
+                completedBatches={completedBatches}
+                partiallyCompletedBatches={partiallyCompletedBatches}
+                notStartedBatches={notStartedBatches}
+                completionPercentage={completionPercentage}
+              />
+            </div>
             
-            <StatCard
-              icon="check_circle"
-              iconColor="text-green-600"
-              backgroundColor="bg-green-100"
-              title="Inventerade batches"
-              value={completedBatches}
-              progressValue={completionPercentage}
-              progressText={`${completionPercentage}% klart`}
-            />
-            
-            <StatCard
-              icon="indeterminate_check_box"
-              iconColor="text-blue-600"
-              backgroundColor="bg-blue-100"
-              title="Delvis inventerade"
-              value={partiallyCompletedBatches}
-            />
-            
-            <StatCard
-              icon="pending_actions"
-              iconColor="text-red-600"
-              backgroundColor="bg-red-100"
-              title="Ej påbörjade batches"
-              value={notStartedBatches}
-            />
+            <div className="md:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard
+                  icon="scale"
+                  iconColor="text-orange-600"
+                  backgroundColor="bg-orange-100"
+                  title="Totalt att inventera"
+                  value={`${totalWeightToInventory.toFixed(2)} kg`}
+                />
+                
+                <StatCard
+                  icon="monitor_weight"
+                  iconColor="text-indigo-600"
+                  backgroundColor="bg-indigo-100"
+                  title="Inventerad vikt"
+                  value={`${totalInventoriedWeight.toFixed(2)} kg`}
+                  progressValue={weightCompletionPercentage}
+                  progressText={`${weightCompletionPercentage}% inventerat`}
+                />
+                
+                <StatCard
+                  icon="difference"
+                  iconColor={weightDifference >= 0 ? "text-emerald-600" : "text-rose-600"}
+                  backgroundColor={weightDifference >= 0 ? "bg-emerald-100" : "bg-rose-100"}
+                  title="Differens"
+                  value={`${weightDifference >= 0 ? '+' : ''}${weightDifference.toFixed(2)} kg`}
+                />
+              </div>
+            </div>
           </div>
           
-          {/* Stats cards - Weight statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <StatCard
-              icon="scale"
-              iconColor="text-orange-600"
-              backgroundColor="bg-orange-100"
-              title="Totalt att inventera"
-              value={`${totalWeightToInventory.toFixed(2)} kg`}
-            />
-            
-            <StatCard
-              icon="monitor_weight"
-              iconColor="text-indigo-600"
-              backgroundColor="bg-indigo-100"
-              title="Inventerad vikt"
-              value={`${totalInventoriedWeight.toFixed(2)} kg`}
-              progressValue={weightCompletionPercentage}
-              progressText={`${weightCompletionPercentage}% inventerat`}
-            />
-            
-            <StatCard
-              icon="difference"
-              iconColor={weightDifference >= 0 ? "text-emerald-600" : "text-rose-600"}
-              backgroundColor={weightDifference >= 0 ? "bg-emerald-100" : "bg-rose-100"}
-              title="Differens"
-              value={`${weightDifference >= 0 ? '+' : ''}${weightDifference.toFixed(2)} kg`}
-            />
-          </div>
+
           
           {/* Filters */}
           <InventoryFilter onFilter={setFilters} />
