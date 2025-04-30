@@ -233,7 +233,8 @@ export default function Dashboard() {
   // Add batch mutation
   const addBatchMutation = useMutation({
     mutationFn: async (data: InsertBatch) => {
-      await apiRequest('POST', '/api/batches', data);
+      const response = await apiRequest('POST', '/api/batches', data);
+      return response as BatchItem;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -244,9 +245,18 @@ export default function Dashboard() {
     },
   });
 
-  const handleAddBatch = async (data: InsertBatch) => {
+  const handleAddBatch = async (data: InsertBatch, markAsInventoried: boolean) => {
     try {
-      await addBatchMutation.mutateAsync(data);
+      // Skapa batch
+      const newBatch = await addBatchMutation.mutateAsync(data);
+      
+      // Om den ska markeras som inventerad direkt
+      if (markAsInventoried && newBatch) {
+        await completeInventoryMutation.mutateAsync({ 
+          id: newBatch.id,
+          location: data.location
+        });
+      }
     } catch (error) {
       toast({
         title: "Fel vid tillägg av batch",

@@ -10,12 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { InsertBatch } from "@shared/schema";
 
 interface AddBatchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (data: InsertBatch) => Promise<void>;
+  onAdd: (data: InsertBatch, markAsInventoried: boolean) => Promise<void>;
 }
 
 export function AddBatchModal({ 
@@ -28,6 +29,7 @@ export function AddBatchModal({
   const [description, setDescription] = useState("");
   const [totalWeight, setTotalWeight] = useState<number>(0);
   const [location, setLocation] = useState("");
+  const [isInventoried, setIsInventoried] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +41,7 @@ export function AddBatchModal({
       setDescription("");
       setTotalWeight(0);
       setLocation("");
+      setIsInventoried(false);
       setError(null);
     }
   }, [isOpen]);
@@ -70,7 +73,7 @@ export function AddBatchModal({
         description,
         totalWeight,
         location
-      });
+      }, isInventoried);
       onClose();
     } catch (err) {
       setError("Ett fel uppstod vid skapande av batch.");
@@ -164,6 +167,23 @@ export function AddBatchModal({
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Ange lagerplats"
                 />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <div className="col-span-1"></div>
+              <div className="col-span-3 flex items-center space-x-2">
+                <Checkbox 
+                  id="isInventoried" 
+                  checked={isInventoried} 
+                  onCheckedChange={(checked) => setIsInventoried(checked === true)}
+                />
+                <Label 
+                  htmlFor="isInventoried" 
+                  className="cursor-pointer"
+                >
+                  Redan inventerad
+                </Label>
               </div>
             </div>
             
