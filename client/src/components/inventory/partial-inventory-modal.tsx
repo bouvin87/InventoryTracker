@@ -32,8 +32,8 @@ export function PartialInventoryModal({
 
   React.useEffect(() => {
     if (batch && isOpen) {
-      // Initialize with a default value of half the total weight
-      setWeight(Math.floor(batch.totalWeight / 2));
+      // Initialize with a default value of 0
+      setWeight(0);
       setLocation(batch.location || "");
       setError(null);
     }
