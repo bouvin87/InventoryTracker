@@ -73,16 +73,19 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
       const location = row[locationIndex];
       
       // Skip rows with missing required values
-      if (!batchNumber || !articleNumber || !description || totalWeight === undefined || !location) {
+      if (!batchNumber || !articleNumber || !description || totalWeight === undefined) {
         continue;
       }
+      
+      // Location is optional, handle appropriately
+      const locationValue = location || "";
       
       // Map to standardized property names
       batch.batchNumber = String(batchNumber);
       batch.articleNumber = String(articleNumber);
       batch.description = String(description);
       batch.totalWeight = typeof totalWeight === 'number' ? totalWeight : parseInt(String(totalWeight));
-      batch.location = String(location);
+      batch.location = locationValue; // Use the locationValue which handles null/undefined
       
       batches.push(batch);
     }
