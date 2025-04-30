@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { useUser } from "@/context/user-context";
 import { cn } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/userStore";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [location] = useLocation();
-  const { user } = useUser();
+  const currentUser = getCurrentUser();
 
   const isActive = (path: string) => {
     return location === path;
@@ -104,11 +104,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div className="absolute bottom-0 w-64 p-4 border-t">
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium">
-            {user?.name ? user.name.substring(0, 2).toUpperCase() : "AN"}
+            {currentUser.name.substring(0, 2).toUpperCase()}
           </div>
           <div className="ml-3">
-            <p className="text-sm font-medium text-gray-700">{user?.name || "Anonym Användare"}</p>
-            <p className="text-xs text-gray-500">{user?.role || "Användare"}</p>
+            <p className="text-sm font-medium text-gray-700">{currentUser.name}</p>
+            <p className="text-xs text-gray-500">{currentUser.role}</p>
           </div>
           <button onClick={onClose} className="ml-auto text-gray-400 hover:text-gray-500 md:hidden">
             <span className="material-icons text-lg">close</span>
