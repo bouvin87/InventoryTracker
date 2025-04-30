@@ -6,15 +6,22 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
   try {
     const workbook = read(buffer);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = utils.sheet_to_json<any>(sheet, { header: 1 });
+    
+    // Use defval to handle empty/missing cells
+    const data = utils.sheet_to_json<any>(sheet, { 
+      header: 1,
+      defval: "" // Handle empty cells with empty string
+    });
     
     // Check if the Excel file is empty
     if (data.length < 2) {
       throw new Error("Excel file is empty or contains only headers");
     }
     
+    console.log(`Total rows found in Excel: ${data.length}`);
+    
     // Get headers from the first row
-    const headers = data[0].map((h: string) => String(h).trim().toLowerCase());
+    const headers = data[0].map((h: string) => String(h || "").trim().toLowerCase());
     console.log("Found headers:", headers);
     
     // Define possible variations of column names, including Swedish variations
@@ -73,8 +80,23 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
       const location = row[locationIndex];
       
       // Skip rows with missing required values
-      if (!batchNumber || !articleNumber || !description || totalWeight === undefined) {
+      // Log each row's data for debugging
+      if (i < 10 || i % 100 === 0) {
+        console.log(`Row ${i}: batchNumber=${batchNumber}, articleNumber=${articleNumber}, description=${description}, totalWeight=${totalWeight}`);
+      }
+      
+      // Skip rows with missing essential data
+      if (!batchNumber || !articleNumber || !description) {
         continue;
+      }
+      
+      // Total weight needs to be parsable to a number, default to 0 if missing or not a number
+      const parsedWeight = totalWeight === "" || totalWeight === undefined ? 0 : 
+                           typeof totalWeight === 'number' ? totalWeight : 
+                           Number(String(totalWeight).replace(/,/g, '.'));
+                           
+      if (isNaN(parsedWeight)) {
+        console.log(`Warning: Invalid weight format at row ${i}: ${totalWeight}, setting to 0`);
       }
       
       // Location is optional, handle appropriately
@@ -84,7 +106,7 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
       batch.batchNumber = String(batchNumber);
       batch.articleNumber = String(articleNumber);
       batch.description = String(description);
-      batch.totalWeight = typeof totalWeight === 'number' ? totalWeight : parseInt(String(totalWeight));
+      batch.totalWeight = isNaN(parsedWeight) ? 0 : parsedWeight;
       batch.location = locationValue; // Use the locationValue which handles null/undefined
       
       batches.push(batch);
