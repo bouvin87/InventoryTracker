@@ -55,13 +55,9 @@ export default function Dashboard() {
   }) || [];
 
   // Extract unique locations for the filter dropdown
-  const locationsSet = new Set<string>();
-  batches?.forEach(batch => {
-    if (batch.location) {
-      locationsSet.add(batch.location);
-    }
-  });
-  const locations = Array.from(locationsSet);
+  const locations = batches
+    ? Array.from(new Set(batches.map(batch => batch.location).filter(Boolean)))
+    : [];
 
   // Calculate statistics
   const totalBatches = filteredBatches.length;
