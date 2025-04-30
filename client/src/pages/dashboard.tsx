@@ -169,10 +169,15 @@ export default function Dashboard() {
   const handleInventoryComplete = async (batch: BatchItem) => {
     try {
       // Vi skickar med location om den finns, annars lämnar vi den odefinierad
-      await completeInventoryMutation.mutateAsync({
-        id: batch.id,
-        location: batch.location
-      });
+      const payload: { id: number; location?: string } = {
+        id: batch.id
+      };
+      
+      if (batch.location) {
+        payload.location = batch.location;
+      }
+      
+      await completeInventoryMutation.mutateAsync(payload);
     } catch (error) {
       toast({
         title: "Fel vid inventering",
