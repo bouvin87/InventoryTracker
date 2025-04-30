@@ -9,8 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/context/user-context";
-import { UserForm } from "@/components/user/user-form";
 
 export default function Settings() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -118,7 +116,7 @@ export default function Settings() {
                   <div>
                     <h3 className="text-lg font-medium">Aktuell användare</h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      {user?.name} ({user?.role})
+                      {currentUser.name} ({currentUser.role})
                     </p>
                   </div>
                   
@@ -126,33 +124,20 @@ export default function Settings() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="user-select">Byt användare</Label>
-                    <Select onValueChange={handleUserChange} defaultValue={user?.id.toString()}>
+                    <Select onValueChange={handleUserChange} defaultValue={currentUserIndex.toString()}>
                       <SelectTrigger id="user-select" className="w-full">
                         <SelectValue placeholder="Välj användare" />
                       </SelectTrigger>
                       <SelectContent>
-                        {allUsers.map((u) => (
-                          <SelectItem key={u.id} value={u.id.toString()}>
-                            {u.name} - {u.role}
+                        {users.map((user, index) => (
+                          <SelectItem key={user.id} value={index.toString()}>
+                            {user.name} - {user.role}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            {/* Create user section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Skapa användare</CardTitle>
-                <CardDescription>
-                  Lägg till en ny användare i systemet
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UserForm />
               </CardContent>
             </Card>
             
