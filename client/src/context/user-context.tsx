@@ -1,8 +1,7 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 
 export interface User {
   id: number;
@@ -49,6 +48,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
     isLoading 
   } = useQuery<User>({
     queryKey: ['/api/user'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/user', { credentials: 'include' });
+        if (response.status === 401) return null;
+        if (!response.ok) throw new Error('Failed to fetch user');
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        return null;
+      }
+    }
   });
   
   // Hämta alla användare
@@ -57,6 +67,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
     isLoading: areAllUsersLoading 
   } = useQuery<User[]>({
     queryKey: ['/api/users'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/users', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch users');
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        return [];
+      }
+    }
   });
 
   // Mutation för att välja användare

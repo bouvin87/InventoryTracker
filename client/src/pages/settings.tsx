@@ -55,12 +55,27 @@ export default function Settings() {
     }
   };
 
-  const { user, allUsers, selectUser, isSelecting } = useUser();
+  const [currentUserIndex, setCurrentUserIndex] = useState(0);
   
-  const handleUserChange = (userId: string) => {
-    if (userId) {
-      selectUser(Number(userId));
-    }
+  // Hårdkodade användardata istället för att använda useUser
+  const users = [
+    { id: 1, name: "John Doe", role: "Lageransvarig" },
+    { id: 2, name: "Anna Svensson", role: "Inventerare" },
+    { id: 3, name: "Erik Johansson", role: "Inventerare" },
+    { id: 4, name: "Maria Larsson", role: "Lageransvarig" }
+  ];
+  
+  const currentUser = users[currentUserIndex];
+  
+  const handleUserChange = async (userIndexString: string) => {
+    const userIndex = parseInt(userIndexString);
+    setCurrentUserIndex(userIndex);
+    
+    // Visa ett meddelande efter användarval
+    toast({
+      title: "Användare bytt",
+      description: `Du är nu inloggad som ${users[userIndex].name}`,
+    });
   };
   
   return (
