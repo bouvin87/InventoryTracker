@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 interface TopBarProps {
   toggleSidebar: () => void;
   onSearch: (searchTerm: string) => void;
+  onAddBatch: () => void;
 }
 
-export function TopBar({ toggleSidebar, onSearch }: TopBarProps) {
+export function TopBar({ toggleSidebar, onSearch, onAddBatch }: TopBarProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,20 +68,18 @@ export function TopBar({ toggleSidebar, onSearch }: TopBarProps) {
         </div>
       </div>
       
-      <div className="border-b border-gray-200 px-6">
-        <Tabs defaultValue="overview">
-          <TabsList className="h-10 mb-0">
-            <TabsTrigger value="overview" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
-              Översikt
-            </TabsTrigger>
-            <TabsTrigger value="active-users" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
-              Aktiva inventerare
-            </TabsTrigger>
-            <TabsTrigger value="statistics" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
-              Statistik
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="border-b border-gray-200 px-6 py-2 flex justify-between items-center">
+        <div className="text-sm font-medium">
+          Inventeringssystem
+        </div>
+        <Button 
+          onClick={onAddBatch}
+          className="bg-primary text-white"
+          size="sm"
+        >
+          <span className="material-icons mr-1 text-sm">add</span>
+          Lägg till batch
+        </Button>
       </div>
     </div>
   );

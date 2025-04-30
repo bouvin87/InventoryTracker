@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { InventoryFilter, FilterValues } from "@/components/inventory/inventory-filter";
 import { ImportModal } from "@/components/inventory/import-modal";
 import { PartialInventoryModal } from "@/components/inventory/partial-inventory-modal";
-import { BatchItem, UpdateBatchItem } from "@shared/schema";
+import { AddBatchModal } from "@/components/inventory/add-batch-modal";
+import { BatchItem, UpdateBatchItem, InsertBatch } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isPartialInventoryModalOpen, setIsPartialInventoryModalOpen] = useState(false);
+  const [isAddBatchModalOpen, setIsAddBatchModalOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<BatchItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<FilterValues>({
@@ -228,6 +230,32 @@ export default function Dashboard() {
     }
   };
 
+  // Add batch mutation
+  const addBatchMutation = useMutation({
+    mutationFn: async (data: InsertBatch) => {
+      await apiRequest('POST', '/api/batches', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
+      toast({
+        title: "Batch tillagd",
+        description: "Ny batch har lagts till",
+      });
+    },
+  });
+
+  const handleAddBatch = async (data: InsertBatch) => {
+    try {
+      await addBatchMutation.mutateAsync(data);
+    } catch (error) {
+      toast({
+        title: "Fel vid tillägg av batch",
+        description: "Kunde inte lägga till batch",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -246,6 +274,7 @@ export default function Dashboard() {
         <TopBar 
           toggleSidebar={() => setIsSidebarOpen(true)} 
           onSearch={setSearchTerm}
+          onAddBatch={() => setIsAddBatchModalOpen(true)}
         />
         
         <div className="px-6 py-6">
