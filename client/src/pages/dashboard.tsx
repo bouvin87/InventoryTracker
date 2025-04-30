@@ -70,7 +70,7 @@ export default function Dashboard() {
     },
   });
 
-  // Import batches mutation
+  // Import batches mutation - kvar för att behålla funktionaliteten i ImportModal
   const importBatchesMutation = useMutation({
     mutationFn: async ({ file, overwrite }: { file: File, overwrite: boolean }) => {
       const formData = new FormData();
@@ -102,7 +102,7 @@ export default function Dashboard() {
 
   
 
-  // Export batches
+  // Export batches - lämnas kvar för referens men används inte på huvuddashboarden
   const handleExport = async () => {
     try {
       const response = await fetch('/api/export', {
@@ -290,23 +290,7 @@ export default function Dashboard() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <h2 className="text-2xl font-semibold text-gray-800">Batchinventering</h2>
             
-            <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
-              <Button 
-                onClick={() => setIsImportModalOpen(true)}
-                className="bg-primary text-white"
-              >
-                <span className="material-icons mr-2 text-sm">upload_file</span>
-                Importera batch
-              </Button>
-              
-              <Button 
-                onClick={handleExport}
-                className="bg-green-600 text-white hover:bg-green-700"
-              >
-                <span className="material-icons mr-2 text-sm">download</span>
-                Exportera resultat
-              </Button>
-            </div>
+            {/* Importera och exportera knappar borttagna från huvuddashboard */}
           </div>
           
           {/* Stats cards */}
