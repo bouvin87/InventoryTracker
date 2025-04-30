@@ -35,11 +35,12 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Handle sorting
-  const toggleSort = (field: keyof BatchItem) => {
-    if (sortField === field) {
+  const toggleSort = (field: string) => {
+    const batchField = field as keyof BatchItem;
+    if (sortField === batchField) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortField(field);
+      setSortField(batchField);
       setSortDirection('asc');
     }
   };
