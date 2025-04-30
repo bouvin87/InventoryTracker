@@ -14,15 +14,30 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
     }
     
     // Get headers from the first row
-    const headers = data[0].map((h: string) => h.trim().toLowerCase());
+    const headers = data[0].map((h: string) => String(h).trim().toLowerCase());
+    console.log("Found headers:", headers);
     
-    // Check required columns
-    const requiredColumns = ['batchnumber', 'articlenumber', 'description', 'totalweight', 'location'];
-    const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+    // Define possible variations of column names
+    const columnVariations = {
+      batchnumber: ['batchnumber', 'batch number', 'batch', 'batchnr', 'batch nr', 'batch_number', 'batch-number'],
+      articlenumber: ['articlenumber', 'article number', 'article', 'articlenr', 'article nr', 'article_number', 'article-number', 'item number', 'itemnumber'],
+      description: ['description', 'desc', 'name', 'item name', 'item description'],
+      totalweight: ['totalweight', 'total weight', 'weight', 'total', 'total_weight', 'total-weight', 'weight total'],
+      location: ['location', 'lagerplats', 'plats', 'lagerställe', 'position', 'storage location']
+    };
     
-    if (missingColumns.length > 0) {
-      throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
+    // Find matching columns in the Excel file
+    const columnMap: Record<string, string> = {};
+    
+    for (const [requiredCol, variations] of Object.entries(columnVariations)) {
+      const matchingHeader = headers.find(h => variations.includes(h));
+      if (!matchingHeader) {
+        throw new Error(`Missing required column: ${requiredCol}. Please include one of these variations: ${variations.join(', ')}`);
+      }
+      columnMap[requiredCol] = matchingHeader;
     }
+    
+    console.log("Column mapping:", columnMap);
     
     // Map data rows to BatchItem[]
     const batches: InsertBatch[] = [];

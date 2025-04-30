@@ -232,6 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ message: "Import successful", count: validBatches.length });
     } catch (error) {
+      console.error("Import error:", error);
       res.status(500).json({ message: "Failed to import Excel file", error: error instanceof Error ? error.message : String(error) });
     }
   });
