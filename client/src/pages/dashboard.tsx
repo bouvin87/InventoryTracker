@@ -140,7 +140,7 @@ export default function Dashboard() {
   // Complete inventory mutation
   const completeInventoryMutation = useMutation({
     mutationFn: async ({ id, location }: { id: number, location?: string }) => {
-      await apiRequest('POST', `/api/batches/${id}/inventory-complete`, { location });
+      return apiRequest<BatchItem>('POST', `/api/batches/${id}/inventory-complete`, { location });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -154,7 +154,7 @@ export default function Dashboard() {
   // Partial inventory mutation
   const partialInventoryMutation = useMutation({
     mutationFn: async ({ id, weight, location }: { id: number, weight: number, location: string }) => {
-      await apiRequest('POST', `/api/batches/${id}/inventory-partial`, { weight, location });
+      return apiRequest<BatchItem>('POST', `/api/batches/${id}/inventory-partial`, { weight, location });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -168,7 +168,7 @@ export default function Dashboard() {
   // Undo inventory mutation
   const undoInventoryMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('POST', `/api/batches/${id}/undo-inventory`, {});
+      return apiRequest<BatchItem>('POST', `/api/batches/${id}/undo-inventory`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
