@@ -11,6 +11,7 @@ export interface IStorage {
   markBatchAsInventored(id: number): Promise<BatchItem>;
   markBatchAsPartiallyInventored(id: number, weight: number): Promise<BatchItem>;
   importBatches(batches: InsertBatch[], overwrite: boolean): Promise<BatchItem[]>;
+  clearAllBatches(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -18,6 +19,11 @@ export class MemStorage implements IStorage {
   private batches: Map<number, BatchItem>;
   private userCurrentId: number;
   private batchCurrentId: number;
+  
+  async clearAllBatches(): Promise<void> {
+    this.batches.clear();
+    this.batchCurrentId = 1;
+  }
 
   constructor() {
     this.users = new Map();

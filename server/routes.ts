@@ -29,6 +29,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear all batches
+  app.delete('/api/batches', async (req, res) => {
+    try {
+      await storage.clearAllBatches();
+      res.json({ message: "All batches have been cleared" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to clear batches" });
+    }
+  });
+
   // Get all batches
   app.get('/api/batches', async (req, res) => {
     try {

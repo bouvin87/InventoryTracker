@@ -7,15 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { BatchItem } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,10 +19,7 @@ interface DataTableProps {
   onUndoInventory?: (item: BatchItem) => void;
 }
 
-const ITEMS_PER_PAGE = 5;
-
 export function DataTable({ data, onView, onInventoryComplete, onInventoryPartial, onUndoInventory }: DataTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<keyof BatchItem | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -72,27 +60,6 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
       }
     });
   }, [data, sortField, sortDirection]);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(sortedData.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedData = sortedData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-  // Generate page numbers for pagination
-  const pageNumbers = [];
-  if (totalPages <= 5) {
-    for (let i = 1; i <= totalPages; i++) {
-      pageNumbers.push(i);
-    }
-  } else {
-    if (currentPage <= 3) {
-      pageNumbers.push(1, 2, 3, 4, 5);
-    } else if (currentPage >= totalPages - 2) {
-      pageNumbers.push(totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-    } else {
-      pageNumbers.push(currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2);
-    }
-  }
 
   // Get status badge class
   const getStatusBadge = (status: string) => {
@@ -193,7 +160,7 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedData.map((item) => (
+            {sortedData.map((item) => (
               <TableRow key={item.id} className="hover:bg-gray-50">
                 <TableCell className="font-medium">{item.batchNumber}</TableCell>
                 <TableCell>{item.articleNumber}</TableCell>
@@ -319,76 +286,12 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
       </div>
       
       <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
-        <div className="flex-1 flex justify-between sm:hidden">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-          >
-            Föregående
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Nästa
-          </Button>
-        </div>
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div className="flex-1 flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-700">
-              Visar <span className="font-medium">{startIndex + 1}</span> till{" "}
-              <span className="font-medium">
-                {Math.min(startIndex + ITEMS_PER_PAGE, sortedData.length)}
-              </span>{" "}
-              av <span className="font-medium">{sortedData.length}</span> resultat
+              Visar alla <span className="font-medium">{sortedData.length}</span> poster
             </p>
           </div>
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  href="#" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentPage(Math.max(1, currentPage - 1));
-                  }}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-              
-              {pageNumbers.map((pageNumber) => (
-                <PaginationItem key={pageNumber}>
-                  <PaginationLink 
-                    href="#" 
-                    isActive={currentPage === pageNumber}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setCurrentPage(pageNumber);
-                    }}
-                  >
-                    {pageNumber}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              
-              {totalPages > 5 && currentPage < totalPages - 2 && <PaginationEllipsis />}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  href="#" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentPage(Math.min(totalPages, currentPage + 1));
-                  }}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
         </div>
       </div>
     </div>
