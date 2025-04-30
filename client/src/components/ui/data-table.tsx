@@ -206,7 +206,7 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                       {item.inventoredWeight} kg
                       {item.inventoredWeight > item.totalWeight && (
                         <span className="ml-1 text-orange-600 text-xs" title="Inventerad vikt överstiger ursprunglig totalvikt">
-                          <span className="material-icons text-xs">warning</span>
+                          ⚠️
                         </span>
                       )}
                     </span>

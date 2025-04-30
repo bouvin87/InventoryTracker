@@ -109,8 +109,8 @@ function generateStandardExcel(batches: BatchItem[]): Buffer {
       batch.articleNumber,
       batch.description,
       batch.location || '',
-      batch.totalWeight,
-      batch.inventoredWeight !== null ? batch.inventoredWeight : '',
+      batch.totalWeight.toString(),
+      batch.inventoredWeight !== null ? batch.inventoredWeight.toString() : '',
       translateStatus(batch.status),
       batch.updatedAt || ''
     ]);
@@ -203,9 +203,9 @@ function generateDetailedExcel(batches: BatchItem[]): Buffer {
       batch.articleNumber,
       batch.description,
       batch.location || '',
-      totalWeight,
-      inventoredWeight !== null ? inventoredWeight : '',
-      discrepancy,
+      totalWeight.toString(),
+      inventoredWeight !== null ? inventoredWeight.toString() : '',
+      discrepancy !== '' ? discrepancy.toString() : '',
       translateStatus(batch.status),
       batch.updatedAt || ''
     ]);
