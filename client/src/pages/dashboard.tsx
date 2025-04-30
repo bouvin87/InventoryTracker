@@ -320,6 +320,7 @@ export default function Dashboard() {
               onView={handleViewBatch}
               onInventoryComplete={handleInventoryComplete}
               onInventoryPartial={handleInventoryPartial}
+              onUndoInventory={handleUndoInventory}
             />
           )}
         </div>
