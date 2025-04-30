@@ -22,6 +22,7 @@ interface DataTableProps {
 export function DataTable({ data, onView, onInventoryComplete, onInventoryPartial, onUndoInventory }: DataTableProps) {
   const [sortField, setSortField] = useState<keyof BatchItem | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showLocation, setShowLocation] = useState<boolean>(true);
 
   // Handle sorting
   const toggleSort = (field: string) => {
@@ -95,6 +96,18 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
         <h3 className="text-lg font-medium text-gray-800">Inventeringslista</h3>
         
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-9 px-3"
+            onClick={() => setShowLocation(!showLocation)}
+          >
+            <span className="material-icons mr-1 text-sm">
+              {showLocation ? "visibility_off" : "visibility"}
+            </span>
+            {showLocation ? "Dölj lagerplats" : "Visa lagerplats"}
+          </Button>
+          
           <Button variant="outline" size="sm" className="h-9 px-3">
             <span className="material-icons mr-1 text-sm">refresh</span>
             Uppdatera
@@ -118,12 +131,14 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('location')}>
-                Lagerplats
-                <button className="ml-1 text-gray-400">
-                  <span className="material-icons text-sm">unfold_more</span>
-                </button>
-              </TableHead>
+              {showLocation && (
+                <TableHead className="whitespace-nowrap" onClick={() => toggleSort('location')}>
+                  Lagerplats
+                  <button className="ml-1 text-gray-400">
+                    <span className="material-icons text-sm">unfold_more</span>
+                  </button>
+                </TableHead>
+              )}
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('batchNumber')}>
                 Batchnummer
                 <button className="ml-1 text-gray-400">
@@ -158,7 +173,7 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
               <TableRow key={item.id} className="hover:bg-gray-50">
                 <TableCell className="font-medium">{item.articleNumber}</TableCell>
                 <TableCell>{item.description}</TableCell>
-                <TableCell>{item.location || '--'}</TableCell>
+                {showLocation && <TableCell>{item.location || '--'}</TableCell>}
                 <TableCell>{item.batchNumber}</TableCell>
                 <TableCell>{item.totalWeight} kg</TableCell>
                 <TableCell>
@@ -180,18 +195,6 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onView(item)}>
-                            <span className="material-icons text-sm">visibility</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Visa</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
                     
                     {/* Inventering/Delvis inventering för ej påbörjade */}
                     {item.status === 'not_started' && (
