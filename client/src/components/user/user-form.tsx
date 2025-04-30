@@ -24,7 +24,7 @@ export function UserForm() {
       username: "",
       name: "",
       password: "",
-      role: "Användare",
+      role: "Inventerare",
     },
   });
   
@@ -95,9 +95,9 @@ export function UserForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
+                  <SelectItem value="Lageransvarig">Lageransvarig</SelectItem>
+                  <SelectItem value="Inventerare">Inventerare</SelectItem>
                   <SelectItem value="Administratör">Administratör</SelectItem>
-                  <SelectItem value="Användare">Användare</SelectItem>
-                  <SelectItem value="Lagerarbetare">Lagerarbetare</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
