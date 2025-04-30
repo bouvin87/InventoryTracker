@@ -156,6 +156,12 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
+              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('location')}>
+                Lagerplats
+                <button className="ml-1 text-gray-400">
+                  <span className="material-icons text-sm">unfold_more</span>
+                </button>
+              </TableHead>
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('totalWeight')}>
                 Total vikt
                 <button className="ml-1 text-gray-400">
@@ -191,6 +197,7 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                 <TableCell className="font-medium">{item.batchNumber}</TableCell>
                 <TableCell>{item.articleNumber}</TableCell>
                 <TableCell>{item.description}</TableCell>
+                <TableCell>{item.location || '--'}</TableCell>
                 <TableCell>{item.totalWeight} kg</TableCell>
                 <TableCell>{item.inventoredWeight !== null ? `${item.inventoredWeight} kg` : '--'}</TableCell>
                 <TableCell>

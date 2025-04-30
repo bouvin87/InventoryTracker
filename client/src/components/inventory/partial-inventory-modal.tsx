@@ -16,7 +16,7 @@ interface PartialInventoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   batch: BatchItem | null;
-  onConfirm: (id: number, weight: number) => Promise<void>;
+  onConfirm: (id: number, weight: number, location: string) => Promise<void>;
 }
 
 export function PartialInventoryModal({ 
@@ -26,6 +26,7 @@ export function PartialInventoryModal({
   onConfirm 
 }: PartialInventoryModalProps) {
   const [weight, setWeight] = useState<number>(0);
+  const [location, setLocation] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +34,7 @@ export function PartialInventoryModal({
     if (batch && isOpen) {
       // Initialize with a default value of half the total weight
       setWeight(Math.floor(batch.totalWeight / 2));
+      setLocation(batch.location || "");
       setError(null);
     }
   }, [batch, isOpen]);
@@ -55,7 +57,7 @@ export function PartialInventoryModal({
     
     try {
       setIsSubmitting(true);
-      await onConfirm(batch.id, weight);
+      await onConfirm(batch.id, weight, location);
       onClose();
     } catch (err) {
       setError("Ett fel uppstod vid uppdatering.");
@@ -105,6 +107,21 @@ export function PartialInventoryModal({
                   max={batch.totalWeight}
                   value={weight}
                   onChange={(e) => setWeight(Number(e.target.value))}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="location" className="text-right">
+                Lagerplats:
+              </Label>
+              <div className="col-span-3">
+                <Input
+                  id="location"
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Ange lagerplats"
                 />
               </div>
             </div>

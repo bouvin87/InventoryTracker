@@ -68,6 +68,7 @@ export class MemStorage implements IStorage {
     const batch: BatchItem = { 
       ...insertBatch, 
       id,
+      location: insertBatch.location || null,
       status: "not_started",
       inventoredWeight: null,
       updatedAt: null,
@@ -190,6 +191,7 @@ export class MemStorage implements IStorage {
       this.batches.set(id, {
         ...batch,
         id,
+        location: null,
         status: "not_started",
         inventoredWeight: null,
         updatedAt: null,

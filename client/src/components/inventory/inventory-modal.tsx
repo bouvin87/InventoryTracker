@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { BatchItem, UpdateBatchItem } from "@shared/schema";
@@ -16,16 +15,16 @@ interface InventoryModalProps {
 }
 
 export function InventoryModal({ isOpen, onClose, batch, onSave }: InventoryModalProps) {
-  const [actualQuantity, setActualQuantity] = useState<number | undefined>(undefined);
-  const [notes, setNotes] = useState<string>("");
+  const [inventoredWeight, setInventoredWeight] = useState<number | undefined>(undefined);
+  const [location, setLocation] = useState<string>("");
   const [status, setStatus] = useState<string>("completed");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (batch) {
-      setActualQuantity(batch.actualQuantity || undefined);
-      setNotes(batch.notes || "");
+      setInventoredWeight(batch.inventoredWeight || undefined);
+      setLocation(batch.location || "");
       setStatus(batch.status);
     }
   }, [batch]);
@@ -33,10 +32,10 @@ export function InventoryModal({ isOpen, onClose, batch, onSave }: InventoryModa
   const handleSave = async () => {
     if (!batch) return;
     
-    if (actualQuantity === undefined) {
+    if (status === "completed" && inventoredWeight === undefined) {
       toast({
         title: "Validering misslyckades",
-        description: "Vänligen ange inventerad mängd",
+        description: "Vänligen ange inventerad vikt",
         variant: "destructive",
       });
       return;
@@ -45,8 +44,8 @@ export function InventoryModal({ isOpen, onClose, batch, onSave }: InventoryModa
     setIsLoading(true);
     try {
       await onSave(batch.id, {
-        actualQuantity,
-        notes,
+        location,
+        inventoredWeight: status === "completed" ? batch.totalWeight : (inventoredWeight || 0),
         status,
         updatedAt: new Date().toISOString().substring(0, 16).replace('T', ' ')
       });
@@ -81,51 +80,53 @@ export function InventoryModal({ isOpen, onClose, batch, onSave }: InventoryModa
           <div className="bg-gray-50 p-4 rounded-md mb-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-gray-500">Produkt</p>
-                <p className="text-sm font-medium">{batch.product}</p>
+                <p className="text-xs text-gray-500">Artikelnummer</p>
+                <p className="text-sm font-medium">{batch.articleNumber}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Lagerplats</p>
-                <p className="text-sm font-medium">{batch.location}</p>
+                <p className="text-xs text-gray-500">Beskrivning</p>
+                <p className="text-sm font-medium">{batch.description}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Förväntad mängd</p>
-                <p className="text-sm font-medium">{batch.expectedQuantity} {batch.unit}</p>
+                <p className="text-xs text-gray-500">Total vikt</p>
+                <p className="text-sm font-medium">{batch.totalWeight} kg</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Enhet</p>
-                <p className="text-sm font-medium">{batch.unit}</p>
+                <p className="text-xs text-gray-500">Inventerad vikt</p>
+                <p className="text-sm font-medium">{batch.inventoredWeight !== null ? `${batch.inventoredWeight} kg` : '--'}</p>
               </div>
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="actualCount">Inventerad mängd</Label>
-            <div className="flex rounded-md shadow-sm">
-              <Input 
-                type="number" 
-                id="actualCount" 
-                value={actualQuantity === undefined ? "" : actualQuantity}
-                onChange={(e) => setActualQuantity(e.target.value ? parseInt(e.target.value) : undefined)}
-                className="rounded-r-none"
-                placeholder="0"
-              />
-              <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-input bg-gray-50 text-gray-500 text-sm">
-                {batch.unit}
-              </span>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="notes">Anteckningar</Label>
-            <Textarea 
-              id="notes" 
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Noteringar om inventeringen..."
-              rows={3}
+            <Label htmlFor="location">Lagerplats</Label>
+            <Input 
+              type="text" 
+              id="location" 
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Ange lagerplats"
             />
           </div>
+          
+          {status === "partially_completed" && (
+            <div className="space-y-2">
+              <Label htmlFor="inventoredWeight">Inventerad vikt (kg)</Label>
+              <div className="flex rounded-md shadow-sm">
+                <Input 
+                  type="number" 
+                  id="inventoredWeight" 
+                  value={inventoredWeight === undefined ? "" : inventoredWeight}
+                  onChange={(e) => setInventoredWeight(e.target.value ? parseInt(e.target.value) : undefined)}
+                  className="rounded-r-none"
+                  placeholder="0"
+                />
+                <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-input bg-gray-50 text-gray-500 text-sm">
+                  kg
+                </span>
+              </div>
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
@@ -135,7 +136,8 @@ export function InventoryModal({ isOpen, onClose, batch, onSave }: InventoryModa
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="completed">Inventerad</SelectItem>
-                <SelectItem value="in_progress">Pågående</SelectItem>
+                <SelectItem value="partially_completed">Delvis inventerad</SelectItem>
+                <SelectItem value="not_started">Ej påbörjad</SelectItem>
               </SelectContent>
             </Select>
           </div>
