@@ -50,10 +50,7 @@ export function PartialInventoryModal({
       return;
     }
     
-    if (weight > batch.totalWeight) {
-      setError(`Vikten kan inte överstiga total vikt (${batch.totalWeight} kg).`);
-      return;
-    }
+    // Ta bort validering för maxvikt - vi tillåter nu vikter högre än totalvikten
     
     try {
       setIsSubmitting(true);
@@ -104,7 +101,6 @@ export function PartialInventoryModal({
                   id="inventoryWeight"
                   type="number"
                   min={0}
-                  max={batch.totalWeight}
                   value={weight}
                   onChange={(e) => setWeight(Number(e.target.value))}
                 />

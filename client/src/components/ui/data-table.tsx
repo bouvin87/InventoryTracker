@@ -200,7 +200,18 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                 <TableCell>{item.description}</TableCell>
                 <TableCell>{item.location || '--'}</TableCell>
                 <TableCell>{item.totalWeight} kg</TableCell>
-                <TableCell>{item.inventoredWeight !== null ? `${item.inventoredWeight} kg` : '--'}</TableCell>
+                <TableCell>
+                  {item.inventoredWeight !== null ? (
+                    <span className={item.inventoredWeight > item.totalWeight ? 'text-orange-600 font-semibold' : ''}>
+                      {item.inventoredWeight} kg
+                      {item.inventoredWeight > item.totalWeight && (
+                        <span className="ml-1 text-orange-600 text-xs" title="Inventerad vikt överstiger ursprunglig totalvikt">
+                          <span className="material-icons text-xs">warning</span>
+                        </span>
+                      )}
+                    </span>
+                  ) : '--'}
+                </TableCell>
                 <TableCell>
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(item.status)}`}>
                     {getStatusText(item.status)}
