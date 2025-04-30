@@ -140,8 +140,17 @@ export default function Dashboard() {
 
   // Complete inventory mutation
   const completeInventoryMutation = useMutation({
-    mutationFn: async ({ id, location }: { id: number, location?: string }) => {
-      return apiRequest<BatchItem>('POST', `/api/batches/${id}/inventory-complete`, { location });
+    mutationFn: async ({ id, location, userId, userName }: { 
+      id: number, 
+      location?: string,
+      userId?: number,
+      userName?: string  
+    }) => {
+      return apiRequest<BatchItem>('POST', `/api/batches/${id}/inventory-complete`, { 
+        location, 
+        userId, 
+        userName 
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -154,8 +163,19 @@ export default function Dashboard() {
 
   // Partial inventory mutation
   const partialInventoryMutation = useMutation({
-    mutationFn: async ({ id, weight, location }: { id: number, weight: number, location: string }) => {
-      return apiRequest<BatchItem>('POST', `/api/batches/${id}/inventory-partial`, { weight, location });
+    mutationFn: async ({ id, weight, location, userId, userName }: { 
+      id: number, 
+      weight: number, 
+      location: string,
+      userId?: number,
+      userName?: string
+    }) => {
+      return apiRequest<BatchItem>('POST', `/api/batches/${id}/inventory-partial`, { 
+        weight, 
+        location,
+        userId,
+        userName
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -271,9 +291,14 @@ export default function Dashboard() {
       
       // Om den ska markeras som inventerad direkt
       if (markAsInventoried && newBatch) {
+        // Hämta den aktuella användaren
+        const currentUser = getCurrentUser();
+        
         await completeInventoryMutation.mutateAsync({ 
           id: newBatch.id,
-          location: data.location || undefined
+          location: data.location || undefined,
+          userId: currentUser.id,
+          userName: currentUser.name
         });
       }
     } catch (error) {
