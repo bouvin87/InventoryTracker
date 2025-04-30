@@ -33,7 +33,7 @@ export const insertBatchSchema = createInsertSchema(batches).omit({
 
 export const updateBatchSchema = z.object({
   location: z.string().optional(),
-  inventoredWeight: z.number().optional(),
+  inventoredWeight: z.number().nullable().optional(),
   status: z.string(),
   updatedAt: z.string(),
 });
