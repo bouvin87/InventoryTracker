@@ -54,6 +54,14 @@ export default function Settings() {
     }
   };
 
+  const { user, allUsers, selectUser, isSelecting } = useUser();
+  
+  const handleUserChange = (userId: string) => {
+    if (userId) {
+      selectUser(Number(userId));
+    }
+  };
+  
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -81,6 +89,44 @@ export default function Settings() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* User management section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Användare</CardTitle>
+                <CardDescription>
+                  Välj användare för inventering
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium">Aktuell användare</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {user?.name} ({user?.role})
+                    </p>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="user-select">Byt användare</Label>
+                    <Select onValueChange={handleUserChange} defaultValue={user?.id.toString()}>
+                      <SelectTrigger id="user-select" className="w-full">
+                        <SelectValue placeholder="Välj användare" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id.toString()}>
+                            {u.name} - {u.role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
             {/* Data management section */}
             <Card>
               <CardHeader>
@@ -115,7 +161,7 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle>Systeminformation</CardTitle>
                 <CardDescription>
-                  Information om systemet och användaren
+                  Information om systemet
                 </CardDescription>
               </CardHeader>
               <CardContent>

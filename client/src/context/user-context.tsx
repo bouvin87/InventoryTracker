@@ -36,32 +36,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const { 
     data: user, 
     isLoading 
-  } = useQuery({
+  } = useQuery<User>({
     queryKey: ['/api/user'],
-    select: (data: User) => data,
-    onError: (error) => {
-      toast({
-        title: "Fel vid hämtning av användare",
-        description: "Kunde inte hämta den aktuella användaren",
-        variant: "destructive",
-      });
-    },
   });
   
   // Hämta alla användare
   const { 
     data: allUsers = [], 
     isLoading: areAllUsersLoading 
-  } = useQuery({
+  } = useQuery<User[]>({
     queryKey: ['/api/users'],
-    select: (data: User[]) => data,
-    onError: (error) => {
-      toast({
-        title: "Fel vid hämtning av användare",
-        description: "Kunde inte hämta listan av användare",
-        variant: "destructive",
-      });
-    },
   });
 
   // Mutation för att välja användare
