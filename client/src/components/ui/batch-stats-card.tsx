@@ -16,50 +16,75 @@ export function BatchStatsCard({
   completionPercentage
 }: BatchStatsCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-medium text-gray-800">Batch Status</h3>
+    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 h-full">
+      <div className="flex items-center mb-6">
+        <div className="w-14 h-14 rounded-md flex items-center justify-center bg-primary-100">
+          <span className="material-icons text-primary text-2xl">inventory_2</span>
+        </div>
+        <div className="ml-4">
+          <h3 className="text-xl font-semibold text-gray-800">Batchstatistik</h3>
           <p className="text-sm text-gray-500">Översikt av alla batches</p>
         </div>
-        <div className="flex items-center">
-          <div className="w-12 h-12 rounded-md flex items-center justify-center bg-primary-100">
-            <span className="material-icons text-primary">inventory_2</span>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-gray-500">Totalt</h3>
-            <p className="text-2xl font-semibold text-gray-900">{totalBatches}</p>
-          </div>
+      </div>
+      
+      <div className="flex justify-between items-center mb-6">
+        <div className="text-center">
+          <div className="text-3xl font-bold text-gray-900">{totalBatches}</div>
+          <div className="text-sm text-gray-500 mt-1">Totalt</div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-3xl font-bold text-green-600">{completedBatches}</div>
+          <div className="text-sm text-gray-500 mt-1">Klara</div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-3xl font-bold text-blue-600">{partiallyCompletedBatches}</div>
+          <div className="text-sm text-gray-500 mt-1">Delvis</div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-3xl font-bold text-red-600">{notStartedBatches}</div>
+          <div className="text-sm text-gray-500 mt-1">Ej påbörjade</div>
         </div>
       </div>
       
       <div className="relative pt-1 mb-4">
-        <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-100">
+        <div className="flex justify-between mb-1">
+          <div className="text-xs font-semibold text-gray-600">Genomförande</div>
+          <div className="text-xs font-semibold text-gray-600">{completionPercentage}%</div>
+        </div>
+        <div className="overflow-hidden h-3 text-xs flex rounded bg-gray-100">
           <div 
             style={{ width: `${completionPercentage}%` }} 
             className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"
           ></div>
         </div>
-        <div className="text-xs text-gray-500 mt-1">{completionPercentage}% klart</div>
       </div>
       
-      <div className="grid grid-cols-3 gap-4">
-        <div className="p-3 rounded-md bg-green-50 flex flex-col items-center">
-          <span className="material-icons text-green-600 mb-1">check_circle</span>
-          <span className="text-lg font-semibold text-gray-800">{completedBatches}</span>
-          <span className="text-xs text-gray-500">Inventerade</span>
+      <div className="grid grid-cols-3 gap-4 mt-6">
+        <div className="p-4 rounded-lg bg-green-50 flex items-center">
+          <span className="material-icons text-green-600 mr-3">check_circle</span>
+          <div>
+            <div className="text-sm font-semibold">{completedBatches} batches</div>
+            <div className="text-xs text-gray-500">Inventerade</div>
+          </div>
         </div>
         
-        <div className="p-3 rounded-md bg-blue-50 flex flex-col items-center">
-          <span className="material-icons text-blue-600 mb-1">indeterminate_check_box</span>
-          <span className="text-lg font-semibold text-gray-800">{partiallyCompletedBatches}</span>
-          <span className="text-xs text-gray-500">Delvis</span>
+        <div className="p-4 rounded-lg bg-blue-50 flex items-center">
+          <span className="material-icons text-blue-600 mr-3">indeterminate_check_box</span>
+          <div>
+            <div className="text-sm font-semibold">{partiallyCompletedBatches} batches</div>
+            <div className="text-xs text-gray-500">Delvis inventerade</div>
+          </div>
         </div>
         
-        <div className="p-3 rounded-md bg-red-50 flex flex-col items-center">
-          <span className="material-icons text-red-600 mb-1">pending_actions</span>
-          <span className="text-lg font-semibold text-gray-800">{notStartedBatches}</span>
-          <span className="text-xs text-gray-500">Ej påbörjade</span>
+        <div className="p-4 rounded-lg bg-red-50 flex items-center">
+          <span className="material-icons text-red-600 mr-3">pending_actions</span>
+          <div>
+            <div className="text-sm font-semibold">{notStartedBatches} batches</div>
+            <div className="text-xs text-gray-500">Ej påbörjade</div>
+          </div>
         </div>
       </div>
     </div>

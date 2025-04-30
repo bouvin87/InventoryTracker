@@ -347,9 +347,9 @@ export default function Dashboard() {
             {/* Importera och exportera knappar borttagna från huvuddashboard */}
           </div>
           
-          {/* Stats cards - Batch counts */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="md:col-span-1">
+          {/* Stats cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="lg:col-span-1">
               <BatchStatsCard
                 totalBatches={totalBatches}
                 completedBatches={completedBatches}
@@ -359,33 +359,52 @@ export default function Dashboard() {
               />
             </div>
             
-            <div className="md:col-span-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard
-                  icon="scale"
-                  iconColor="text-orange-600"
-                  backgroundColor="bg-orange-100"
-                  title="Totalt att inventera"
-                  value={`${totalWeightToInventory.toFixed(2)} kg`}
-                />
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 h-full">
+                <div className="flex items-center mb-4">
+                  <div className="w-14 h-14 rounded-md flex items-center justify-center bg-orange-100">
+                    <span className="material-icons text-orange-600 text-2xl">scale</span>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-xl font-semibold text-gray-800">Viktstatistik</h3>
+                    <p className="text-sm text-gray-500">Översikt av vikter</p>
+                  </div>
+                </div>
                 
-                <StatCard
-                  icon="monitor_weight"
-                  iconColor="text-indigo-600"
-                  backgroundColor="bg-indigo-100"
-                  title="Inventerad vikt"
-                  value={`${totalInventoriedWeight.toFixed(2)} kg`}
-                  progressValue={weightCompletionPercentage}
-                  progressText={`${weightCompletionPercentage}% inventerat`}
-                />
+                <div className="relative pt-1 mb-6">
+                  <div className="flex justify-between mb-1">
+                    <div className="text-xs font-semibold text-gray-600">Viktinventerat</div>
+                    <div className="text-xs font-semibold text-gray-600">{weightCompletionPercentage}%</div>
+                  </div>
+                  <div className="overflow-hidden h-3 text-xs flex rounded bg-gray-100">
+                    <div 
+                      style={{ width: `${weightCompletionPercentage}%` }} 
+                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"
+                    ></div>
+                  </div>
+                </div>
                 
-                <StatCard
-                  icon="difference"
-                  iconColor={weightDifference >= 0 ? "text-emerald-600" : "text-rose-600"}
-                  backgroundColor={weightDifference >= 0 ? "bg-emerald-100" : "bg-rose-100"}
-                  title="Differens"
-                  value={`${weightDifference >= 0 ? '+' : ''}${weightDifference.toFixed(2)} kg`}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="p-4 rounded-lg bg-orange-50 flex flex-col items-center justify-center">
+                    <span className="text-sm text-gray-500">Totalt</span>
+                    <span className="text-2xl font-bold text-gray-900">{totalWeightToInventory.toFixed(2)}</span>
+                    <span className="text-xs text-gray-500">kg</span>
+                  </div>
+                  
+                  <div className="p-4 rounded-lg bg-indigo-50 flex flex-col items-center justify-center">
+                    <span className="text-sm text-gray-500">Inventerat</span>
+                    <span className="text-2xl font-bold text-indigo-700">{totalInventoriedWeight.toFixed(2)}</span>
+                    <span className="text-xs text-gray-500">kg</span>
+                  </div>
+                  
+                  <div className={`p-4 rounded-lg flex flex-col items-center justify-center ${weightDifference >= 0 ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+                    <span className="text-sm text-gray-500">Differens</span>
+                    <span className={`text-2xl font-bold ${weightDifference >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {weightDifference >= 0 ? '+' : ''}{weightDifference.toFixed(2)}
+                    </span>
+                    <span className="text-xs text-gray-500">kg</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

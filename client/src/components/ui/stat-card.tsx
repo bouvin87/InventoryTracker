@@ -20,13 +20,13 @@ export function StatCard({
   progressText
 }: StatCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-      <div className="flex items-center">
+    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 h-full">
+      <div className="flex items-center mb-3">
         <div className={cn(
           "flex-shrink-0 w-12 h-12 rounded-md flex items-center justify-center",
           backgroundColor
         )}>
-          <span className={cn("material-icons", iconColor)}>{icon}</span>
+          <span className={cn("material-icons text-xl", iconColor)}>{icon}</span>
         </div>
         <div className="ml-4">
           <h3 className="text-sm font-medium text-gray-500">{title}</h3>
@@ -37,7 +37,11 @@ export function StatCard({
       {progressValue !== undefined && progressText && (
         <div className="mt-4">
           <div className="relative pt-1">
-            <div className="overflow-hidden h-2 mb-1 text-xs flex rounded bg-gray-100">
+            <div className="flex justify-between mb-1">
+              <div className="text-xs font-semibold text-gray-600">Genomförande</div>
+              <div className="text-xs font-semibold text-gray-600">{progressValue}%</div>
+            </div>
+            <div className="overflow-hidden h-3 mb-1 text-xs flex rounded bg-gray-100">
               <div 
                 style={{ width: `${progressValue}%` }} 
                 className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"
