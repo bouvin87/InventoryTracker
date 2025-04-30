@@ -17,13 +17,13 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
     const headers = data[0].map((h: string) => String(h).trim().toLowerCase());
     console.log("Found headers:", headers);
     
-    // Define possible variations of column names
+    // Define possible variations of column names, including Swedish variations
     const columnVariations = {
-      batchnumber: ['batchnumber', 'batch number', 'batch', 'batchnr', 'batch nr', 'batch_number', 'batch-number'],
-      articlenumber: ['articlenumber', 'article number', 'article', 'articlenr', 'article nr', 'article_number', 'article-number', 'item number', 'itemnumber'],
-      description: ['description', 'desc', 'name', 'item name', 'item description'],
-      totalweight: ['totalweight', 'total weight', 'weight', 'total', 'total_weight', 'total-weight', 'weight total'],
-      location: ['location', 'lagerplats', 'plats', 'lagerställe', 'position', 'storage location']
+      batchnumber: ['batchnumber', 'batch number', 'batch', 'batchnr', 'batch nr', 'batch_number', 'batch-number', 'batchnummer'],
+      articlenumber: ['articlenumber', 'article number', 'article', 'articlenr', 'article nr', 'article_number', 'article-number', 'item number', 'itemnumber', 'artikelnummer'],
+      description: ['description', 'desc', 'name', 'item name', 'item description', 'benämning', 'beskrivning', 'artikel', 'artikelnamn'],
+      totalweight: ['totalweight', 'total weight', 'weight', 'total', 'total_weight', 'total-weight', 'weight total', 'vikt', 'totalvikt', 'total vikt', 'totalt saldo', 'totalt', 'saldo'],
+      location: ['location', 'lagerplats', 'plats', 'lagerställe', 'position', 'storage location', 'rad', 'position', 'lagerposition']
     };
     
     // Find matching columns in the Excel file
