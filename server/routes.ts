@@ -87,10 +87,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Batch not found" });
       }
       
+      // Validate request body
+      const schema = z.object({
+        location: z.string().optional()
+      });
+      
+      // Parse body even if it's empty
+      const { location } = schema.parse(req.body || {});
+      
+      // First update the location if provided
+      if (location) {
+        await storage.updateBatch(id, {
+          location,
+          status: batch.status, // Keep current status
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
       const updatedBatch = await storage.markBatchAsInventored(id);
       res.json(updatedBatch);
     } catch (error) {
       console.error("Error marking batch as inventoried:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input values", errors: error.errors });
+      }
       res.status(500).json({ message: "Failed to mark batch as inventoried" });
     }
   });
@@ -122,20 +142,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Batch not found" });
       }
       
-      // Validate weight from request body
+      // Validate weight and location from request body
       const schema = z.object({
-        weight: z.number().min(0)
+        weight: z.number().min(0),
+        location: z.string().optional()
       });
       
-      const { weight } = schema.parse(req.body);
-      console.log(`Marking batch ${id} as partially inventoried with weight ${weight}`);
+      const { weight, location } = schema.parse(req.body);
+      console.log(`Marking batch ${id} as partially inventoried with weight ${weight} and location ${location || 'not specified'}`);
+      
+      // First update the location if provided
+      if (location) {
+        await storage.updateBatch(id, {
+          location,
+          status: batch.status, // Keep current status
+          updatedAt: new Date().toISOString()
+        });
+      }
       
       const updatedBatch = await storage.markBatchAsPartiallyInventored(id, weight);
       res.json(updatedBatch);
     } catch (error) {
       console.error("Error marking batch as partially inventoried:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid weight value", errors: error.errors });
+        return res.status(400).json({ message: "Invalid input values", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to mark batch as partially inventoried" });
     }

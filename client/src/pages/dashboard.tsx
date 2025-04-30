@@ -135,8 +135,8 @@ export default function Dashboard() {
 
   // Complete inventory mutation
   const completeInventoryMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest('POST', `/api/batches/${id}/inventory-complete`, {});
+    mutationFn: async ({ id, location }: { id: number, location?: string }) => {
+      await apiRequest('POST', `/api/batches/${id}/inventory-complete`, { location });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -149,8 +149,8 @@ export default function Dashboard() {
 
   // Partial inventory mutation
   const partialInventoryMutation = useMutation({
-    mutationFn: async ({ id, weight }: { id: number, weight: number }) => {
-      await apiRequest('POST', `/api/batches/${id}/inventory-partial`, { weight });
+    mutationFn: async ({ id, weight, location }: { id: number, weight: number, location: string }) => {
+      await apiRequest('POST', `/api/batches/${id}/inventory-partial`, { weight, location });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -168,7 +168,11 @@ export default function Dashboard() {
 
   const handleInventoryComplete = async (batch: BatchItem) => {
     try {
-      await completeInventoryMutation.mutateAsync(batch.id);
+      // Vi skickar med location om den finns, annars lämnar vi den odefinierad
+      await completeInventoryMutation.mutateAsync({
+        id: batch.id,
+        location: batch.location
+      });
     } catch (error) {
       toast({
         title: "Fel vid inventering",
@@ -183,8 +187,8 @@ export default function Dashboard() {
     setIsPartialInventoryModalOpen(true);
   };
 
-  const handleConfirmPartialInventory = async (id: number, weight: number) => {
-    await partialInventoryMutation.mutateAsync({ id, weight });
+  const handleConfirmPartialInventory = async (id: number, weight: number, location: string) => {
+    await partialInventoryMutation.mutateAsync({ id, weight, location });
   };
 
   const handleImportFile = async (file: File, overwrite: boolean) => {
