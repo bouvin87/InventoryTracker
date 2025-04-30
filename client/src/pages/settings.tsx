@@ -69,6 +69,7 @@ export default function Settings() {
         <TopBar 
           toggleSidebar={() => setIsSidebarOpen(true)} 
           onSearch={() => {}} // No search functionality on settings page
+          onAddBatch={() => {}} // No add batch functionality on settings page
         />
         
         <div className="px-6 py-6">

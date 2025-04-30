@@ -370,6 +370,12 @@ export default function Dashboard() {
         batch={selectedBatch}
         onConfirm={handleConfirmPartialInventory}
       />
+
+      <AddBatchModal
+        isOpen={isAddBatchModalOpen}
+        onClose={() => setIsAddBatchModalOpen(false)}
+        onAdd={handleAddBatch}
+      />
     </div>
   );
 }

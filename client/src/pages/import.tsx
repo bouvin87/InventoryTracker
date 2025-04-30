@@ -125,6 +125,7 @@ export default function Import() {
         <TopBar 
           toggleSidebar={() => setIsSidebarOpen(true)}
           onSearch={() => {}}
+          onAddBatch={() => {}}
         />
         
         <div className="px-6 py-6">
