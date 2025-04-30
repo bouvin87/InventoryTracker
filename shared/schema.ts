@@ -5,13 +5,11 @@ import { z } from "zod";
 export const batches = pgTable("batches", {
   id: serial("id").primaryKey(),
   batchNumber: text("batch_number").notNull().unique(),
-  product: text("product").notNull(),
-  location: text("location").notNull(),
-  expectedQuantity: integer("expected_quantity").notNull(),
-  actualQuantity: integer("actual_quantity"),
-  unit: text("unit").notNull(),
+  articleNumber: text("article_number").notNull(),
+  description: text("description").notNull(),
+  totalWeight: integer("total_weight").notNull(),
+  inventoredWeight: integer("inventored_weight"),
   status: text("status").notNull().default("not_started"),
-  notes: text("notes"),
   updatedAt: text("updated_at"),
   userId: integer("user_id"),
 });
@@ -26,16 +24,14 @@ export const users = pgTable("users", {
 
 export const insertBatchSchema = createInsertSchema(batches).omit({
   id: true,
-  actualQuantity: true,
+  inventoredWeight: true,
   status: true,
-  notes: true,
   updatedAt: true,
   userId: true,
 });
 
 export const updateBatchSchema = z.object({
-  actualQuantity: z.number(),
-  notes: z.string().optional(),
+  inventoredWeight: z.number().optional(),
   status: z.string(),
   updatedAt: z.string(),
 });

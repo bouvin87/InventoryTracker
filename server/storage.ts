@@ -8,6 +8,8 @@ export interface IStorage {
   getAllBatches(): Promise<BatchItem[]>;
   createBatch(batch: InsertBatch): Promise<BatchItem>;
   updateBatch(id: number, data: UpdateBatchItem): Promise<BatchItem>;
+  markBatchAsInventored(id: number): Promise<BatchItem>;
+  markBatchAsPartiallyInventored(id: number, weight: number): Promise<BatchItem>;
   importBatches(batches: InsertBatch[], overwrite: boolean): Promise<BatchItem[]>;
 }
 
@@ -67,8 +69,7 @@ export class MemStorage implements IStorage {
       ...insertBatch, 
       id,
       status: "not_started",
-      actualQuantity: null,
-      notes: null,
+      inventoredWeight: null,
       updatedAt: null,
       userId: null
     };
@@ -87,6 +88,38 @@ export class MemStorage implements IStorage {
     return updatedBatch;
   }
   
+  async markBatchAsInventored(id: number): Promise<BatchItem> {
+    const batch = this.batches.get(id);
+    if (!batch) {
+      throw new Error(`Batch with id ${id} not found`);
+    }
+    
+    const updatedBatch = { 
+      ...batch, 
+      status: "completed", 
+      inventoredWeight: batch.totalWeight, 
+      updatedAt: new Date().toISOString()
+    };
+    this.batches.set(id, updatedBatch);
+    return updatedBatch;
+  }
+  
+  async markBatchAsPartiallyInventored(id: number, weight: number): Promise<BatchItem> {
+    const batch = this.batches.get(id);
+    if (!batch) {
+      throw new Error(`Batch with id ${id} not found`);
+    }
+    
+    const updatedBatch = { 
+      ...batch, 
+      status: "partially_completed", 
+      inventoredWeight: weight, 
+      updatedAt: new Date().toISOString()
+    };
+    this.batches.set(id, updatedBatch);
+    return updatedBatch;
+  }
+  
   async importBatches(batches: InsertBatch[], overwrite: boolean): Promise<BatchItem[]> {
     const results: BatchItem[] = [];
     
@@ -100,10 +133,9 @@ export class MemStorage implements IStorage {
         // Update existing batch
         const updatedBatch = { 
           ...existingBatch,
-          product: insertBatch.product,
-          location: insertBatch.location,
-          expectedQuantity: insertBatch.expectedQuantity,
-          unit: insertBatch.unit
+          articleNumber: insertBatch.articleNumber,
+          description: insertBatch.description,
+          totalWeight: insertBatch.totalWeight
         };
         this.batches.set(existingBatch.id, updatedBatch);
         results.push(updatedBatch);
@@ -121,39 +153,34 @@ export class MemStorage implements IStorage {
   private addSampleData() {
     const sampleData: InsertBatch[] = [
       {
-        batchNumber: "BAT-2023-1001",
-        product: "Kopplingsdon KP-45",
-        location: "A-12-5",
-        expectedQuantity: 250,
-        unit: "st"
+        batchNumber: "A12345",
+        articleNumber: "45678",
+        description: "Stålbalk 40mm",
+        totalWeight: 2500
       },
       {
-        batchNumber: "BAT-2023-1002",
-        product: "Skruvset SK-100",
-        location: "B-04-2",
-        expectedQuantity: 500,
-        unit: "st"
+        batchNumber: "B67890",
+        articleNumber: "23456",
+        description: "Aluminiumplåt 2mm",
+        totalWeight: 1200
       },
       {
-        batchNumber: "BAT-2023-1003",
-        product: "Kabelhållare KH-25",
-        location: "A-08-1",
-        expectedQuantity: 120,
-        unit: "st"
+        batchNumber: "C13579",
+        articleNumber: "89012",
+        description: "Kopparrör 15mm",
+        totalWeight: 800
       },
       {
-        batchNumber: "BAT-2023-1004",
-        product: "Motordelar M-200",
-        location: "C-02-4",
-        expectedQuantity: 45,
-        unit: "st"
+        batchNumber: "D24680",
+        articleNumber: "34567",
+        description: "Järnplåt 5mm",
+        totalWeight: 3200
       },
       {
-        batchNumber: "BAT-2023-1005",
-        product: "Packning P-55",
-        location: "B-10-3",
-        expectedQuantity: 300,
-        unit: "st"
+        batchNumber: "E35791",
+        articleNumber: "10111",
+        description: "Mässingsstång 10mm",
+        totalWeight: 950
       }
     ];
     
@@ -164,8 +191,7 @@ export class MemStorage implements IStorage {
         ...batch,
         id,
         status: "not_started",
-        actualQuantity: null,
-        notes: null,
+        inventoredWeight: null,
         updatedAt: null,
         userId: null
       });
@@ -177,7 +203,7 @@ export class MemStorage implements IStorage {
       this.batches.set(1, {
         ...batch1,
         status: "completed",
-        actualQuantity: 253,
+        inventoredWeight: batch1.totalWeight,
         updatedAt: "2023-09-12 14:32",
         userId: 1
       });
@@ -187,7 +213,8 @@ export class MemStorage implements IStorage {
     if (batch2) {
       this.batches.set(2, {
         ...batch2,
-        status: "in_progress",
+        status: "partially_completed",
+        inventoredWeight: Math.round(batch2.totalWeight * 0.7),
         updatedAt: "2023-09-12 10:15",
         userId: 1
       });
@@ -198,18 +225,8 @@ export class MemStorage implements IStorage {
       this.batches.set(4, {
         ...batch4,
         status: "completed",
-        actualQuantity: 42,
+        inventoredWeight: batch4.totalWeight,
         updatedAt: "2023-09-11 16:45",
-        userId: 1
-      });
-    }
-    
-    const batch5 = this.batches.get(5);
-    if (batch5) {
-      this.batches.set(5, {
-        ...batch5,
-        status: "in_progress",
-        updatedAt: "2023-09-12 09:22",
         userId: 1
       });
     }
