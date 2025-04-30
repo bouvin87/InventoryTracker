@@ -30,7 +30,7 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
     const columnMap: Record<string, string> = {};
     
     for (const [requiredCol, variations] of Object.entries(columnVariations)) {
-      const matchingHeader = headers.find(h => variations.includes(h));
+      const matchingHeader = headers.find((h: string) => variations.includes(h));
       if (!matchingHeader) {
         throw new Error(`Missing required column: ${requiredCol}. Please include one of these variations: ${variations.join(', ')}`);
       }
@@ -50,32 +50,39 @@ export async function parseExcel(buffer: Buffer): Promise<InsertBatch[]> {
       
       const batch: any = {};
       
-      // Map each column value to the corresponding property
-      for (let j = 0; j < headers.length; j++) {
-        const header = headers[j];
-        const value = row[j];
-        
-        // Skip undefined values
-        if (value === undefined) continue;
-        
-        // Convert header to camelCase (e.g., batchnumber to batchNumber)
-        const prop = header === 'batchnumber' ? 'batchNumber' :
-                    header === 'articlenumber' ? 'articleNumber' :
-                    header === 'totalweight' ? 'totalWeight' : header;
-        
-        // Parse numbers for weight fields
-        if (prop === 'totalWeight') {
-          batch[prop] = typeof value === 'number' ? value : parseInt(value);
-        } else {
-          batch[prop] = value;
-        }
+      // Use the column mapping to get the right values
+      // Set up properties based on column mapping
+      const batchNumberHeader = columnMap.batchnumber; 
+      const articleNumberHeader = columnMap.articlenumber;
+      const descriptionHeader = columnMap.description;
+      const totalWeightHeader = columnMap.totalweight;
+      const locationHeader = columnMap.location;
+      
+      // Find the index of each header
+      const batchNumberIndex = headers.indexOf(batchNumberHeader);
+      const articleNumberIndex = headers.indexOf(articleNumberHeader);
+      const descriptionIndex = headers.indexOf(descriptionHeader);
+      const totalWeightIndex = headers.indexOf(totalWeightHeader);
+      const locationIndex = headers.indexOf(locationHeader);
+      
+      // Get values using indices
+      const batchNumber = row[batchNumberIndex];
+      const articleNumber = row[articleNumberIndex];
+      const description = row[descriptionIndex];
+      const totalWeight = row[totalWeightIndex];
+      const location = row[locationIndex];
+      
+      // Skip rows with missing required values
+      if (!batchNumber || !articleNumber || !description || totalWeight === undefined || !location) {
+        continue;
       }
       
-      // Validate required fields
-      if (!batch.batchNumber || !batch.articleNumber || !batch.description || 
-          batch.totalWeight === undefined || !batch.location) {
-        continue; // Skip rows with missing required fields
-      }
+      // Map to standardized property names
+      batch.batchNumber = String(batchNumber);
+      batch.articleNumber = String(articleNumber);
+      batch.description = String(description);
+      batch.totalWeight = typeof totalWeight === 'number' ? totalWeight : parseInt(String(totalWeight));
+      batch.location = String(location);
       
       batches.push(batch);
     }
