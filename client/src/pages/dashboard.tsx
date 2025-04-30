@@ -63,7 +63,7 @@ export default function Dashboard() {
   // Update batch mutation
   const updateBatchMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number, data: UpdateBatchItem }) => {
-      await apiRequest('PUT', `/api/batches/${id}`, data);
+      return apiRequest<BatchItem>('PUT', `/api/batches/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -233,8 +233,7 @@ export default function Dashboard() {
   // Add batch mutation
   const addBatchMutation = useMutation({
     mutationFn: async (data: InsertBatch) => {
-      const response = await apiRequest('POST', '/api/batches', data);
-      return response as BatchItem;
+      return apiRequest<BatchItem>('POST', '/api/batches', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -254,7 +253,7 @@ export default function Dashboard() {
       if (markAsInventoried && newBatch) {
         await completeInventoryMutation.mutateAsync({ 
           id: newBatch.id,
-          location: data.location
+          location: data.location || undefined
         });
       }
     } catch (error) {
