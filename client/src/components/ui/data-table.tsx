@@ -146,13 +146,13 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                 </button>
               </TableHead>
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('totalWeight')}>
-                Totalt saldo
+                Saldo
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('inventoredWeight')}>
-                Inventerad vikt
+                Inv.
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>

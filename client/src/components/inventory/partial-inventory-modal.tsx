@@ -80,7 +80,7 @@ export function PartialInventoryModal({
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="totalWeight" className="text-right">
-                Total vikt:
+                Saldo:
               </Label>
               <div className="col-span-3">
                 <Input
@@ -94,7 +94,7 @@ export function PartialInventoryModal({
             
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="inventoryWeight" className="text-right">
-                Inventerad vikt:
+                Inv.:
               </Label>
               <div className="col-span-3">
                 <Input
