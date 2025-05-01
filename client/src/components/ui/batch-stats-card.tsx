@@ -35,7 +35,7 @@ export function BatchStatsCard({
         
         <div className="text-center">
           <div className="text-3xl font-bold text-green-600">{completedBatches}</div>
-          <div className="text-sm text-gray-500 mt-1">Klara</div>
+          <div className="text-sm text-gray-500 mt-1">Inventerade</div>
         </div>
         
         <div className="text-center">
@@ -49,7 +49,7 @@ export function BatchStatsCard({
         </div>
       </div>
       
-      <div className="relative pt-1 mb-4">
+      <div className="relative pt-1">
         <div className="flex justify-between mb-1">
           <div className="text-xs font-semibold text-gray-600">Genomförande</div>
           <div className="text-xs font-semibold text-gray-600">{completionPercentage}%</div>
@@ -59,32 +59,6 @@ export function BatchStatsCard({
             style={{ width: `${completionPercentage}%` }} 
             className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"
           ></div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-3 gap-4 mt-6">
-        <div className="p-4 rounded-lg bg-green-50 flex items-center">
-          <span className="material-icons text-green-600 mr-3">check_circle</span>
-          <div>
-            <div className="text-sm font-semibold">{completedBatches} batches</div>
-            <div className="text-xs text-gray-500">Inventerade</div>
-          </div>
-        </div>
-        
-        <div className="p-4 rounded-lg bg-blue-50 flex items-center">
-          <span className="material-icons text-blue-600 mr-3">indeterminate_check_box</span>
-          <div>
-            <div className="text-sm font-semibold">{partiallyCompletedBatches} batches</div>
-            <div className="text-xs text-gray-500">Delvis inventerade</div>
-          </div>
-        </div>
-        
-        <div className="p-4 rounded-lg bg-red-50 flex items-center">
-          <span className="material-icons text-red-600 mr-3">pending_actions</span>
-          <div>
-            <div className="text-sm font-semibold">{notStartedBatches} batches</div>
-            <div className="text-xs text-gray-500">Ej påbörjade</div>
-          </div>
         </div>
       </div>
     </div>
