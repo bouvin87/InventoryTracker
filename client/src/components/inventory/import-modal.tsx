@@ -74,7 +74,15 @@ export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
 
     setIsLoading(true);
     try {
+      // Visa en initial toast för att indikera att import har börjat
+      toast({
+        title: "Import pågår",
+        description: "Importerar Excel-data. Detta kan ta en stund för stora filer...",
+      });
+      
       await onImport(file, overwrite);
+      
+      // Visa en toast när importen är klar
       toast({
         title: "Import lyckades",
         description: "Excel-filen har importerats framgångsrikt",

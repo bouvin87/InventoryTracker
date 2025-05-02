@@ -17,6 +17,9 @@ export interface WebSocketOptions {
   shouldReconnect?: boolean;
 }
 
+// Global singleton WebSocket instance
+let globalSocket: WebSocket | null = null;
+
 export function useWebSocket(
   url: string,
   options: WebSocketOptions = {}
@@ -26,38 +29,40 @@ export function useWebSocket(
     onClose,
     onMessage,
     onError,
-    reconnectInterval = 10000, // Öka till 10 sekunder för att minska antalet återanslutningar
-    reconnectAttempts = 5, // Minska antalet försök
+    reconnectInterval = 10000,
+    reconnectAttempts = 5,
     shouldReconnect = true,
   } = options;
 
-  const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CONNECTING);
+  const [readyState, setReadyState] = useState<ReadyState>(
+    globalSocket?.readyState || ReadyState.CONNECTING
+  );
   const [lastMessage, setLastMessage] = useState<MessageEvent | null>(null);
-  const [reconnectCount, setReconnectCount] = useState(0);
-  const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
-
-  // Starta om reconnect-räknaren när vi byter URL
-  useEffect(() => {
-    setReconnectCount(0);
-  }, [url]);
+  const socketRef = useRef<WebSocket | null>(null);
 
   const handleOpen = useCallback((event: WebSocketEventMap['open']) => {
+    console.log('WebSocket connected!');
     setReadyState(ReadyState.OPEN);
-    setReconnectCount(0);
     onOpen?.(event);
   }, [onOpen]);
 
   const handleClose = useCallback((event: WebSocketEventMap['close']) => {
     setReadyState(ReadyState.CLOSED);
     onClose?.(event);
+    
+    // Clear global socket if it's the one being closed
+    if (globalSocket === socketRef.current) {
+      globalSocket = null;
+    }
 
-    if (shouldReconnect && (reconnectAttempts === -1 || reconnectCount < reconnectAttempts)) {
+    if (shouldReconnect) {
       reconnectTimeoutRef.current = window.setTimeout(() => {
-        setReconnectCount(prevCount => prevCount + 1);
+        console.log('Attempting to reconnect WebSocket...');
+        setupWebSocket();
       }, reconnectInterval);
     }
-  }, [onClose, shouldReconnect, reconnectAttempts, reconnectCount, reconnectInterval]);
+  }, [onClose, shouldReconnect, reconnectInterval]);
 
   const handleMessage = useCallback((event: WebSocketEventMap['message']) => {
     setLastMessage(event);
@@ -65,80 +70,76 @@ export function useWebSocket(
   }, [onMessage]);
 
   const handleError = useCallback((event: WebSocketEventMap['error']) => {
+    console.error('WebSocket error:', event);
     onError?.(event);
   }, [onError]);
 
-  // Funktion för att skicka meddelanden
   const sendMessage = useCallback((data: string | ArrayBufferLike | Blob | ArrayBufferView) => {
-    if (socketRef.current?.readyState === ReadyState.OPEN) {
-      socketRef.current.send(data);
+    const socket = socketRef.current || globalSocket;
+    if (socket?.readyState === ReadyState.OPEN) {
+      socket.send(data);
       return true;
     }
     return false;
   }, []);
 
-  // Anslut websocket
-  useEffect(() => {
-    // Förhindra onödiga anslutningar under utveckling
-    if (import.meta.env.DEV) {
-      console.log('Initierar WebSocket-anslutning');
-    }
-    
-    // Skapa WebSocket med korrekt protokoll (ws/wss)
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = url.startsWith('ws:') || url.startsWith('wss:') 
-      ? url 
-      : `${protocol}//${window.location.host}${url}`;
-    
-    // Återanvänd befintlig WebSocket om den fortfarande är öppen
-    if (socketRef.current?.readyState === ReadyState.OPEN) {
+  const setupWebSocket = useCallback(() => {
+    // If there's already a global socket that's open, use it
+    if (globalSocket && globalSocket.readyState === ReadyState.OPEN) {
+      socketRef.current = globalSocket;
+      setReadyState(ReadyState.OPEN);
       return;
     }
-    
-    // Rensa gamla anslutningar
+
+    // Clean up any existing connection
     if (socketRef.current) {
       try {
+        socketRef.current.removeEventListener('open', handleOpen);
+        socketRef.current.removeEventListener('close', handleClose);
+        socketRef.current.removeEventListener('message', handleMessage);
+        socketRef.current.removeEventListener('error', handleError);
         socketRef.current.close();
-      } catch (err) {
-        // Ignorera eventuella fel vid stängning
+      } catch (error) {
+        // Ignore errors
       }
     }
+
+    // Create a new WebSocket connection
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = url.startsWith('ws:') || url.startsWith('wss:') 
+        ? url 
+        : `${protocol}//${window.location.host}${url}`;
+
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+      globalSocket = socket;
+      
+      setReadyState(socket.readyState);
+      
+      socket.addEventListener('open', handleOpen);
+      socket.addEventListener('close', handleClose);
+      socket.addEventListener('message', handleMessage);
+      socket.addEventListener('error', handleError);
+    } catch (error) {
+      console.error('Error creating WebSocket:', error);
+    }
+  }, [url, handleOpen, handleClose, handleMessage, handleError]);
+
+  // Set up WebSocket connection
+  useEffect(() => {
+    setupWebSocket();
     
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
-    setReadyState(ReadyState.CONNECTING);
-
-    // Lägg till event handlers
-    socket.addEventListener('open', handleOpen);
-    socket.addEventListener('close', handleClose);
-    socket.addEventListener('message', handleMessage);
-    socket.addEventListener('error', handleError);
-
     return () => {
-      // Rensa 
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-
-      // Stäng socket vid unmounting
-      if (socket) {
-        socket.removeEventListener('open', handleOpen);
-        socket.removeEventListener('close', handleClose);
-        socket.removeEventListener('message', handleMessage);
-        socket.removeEventListener('error', handleError);
-
-        // Stäng socket om den är öppen
-        if (socket.readyState === ReadyState.OPEN) {
-          socket.close();
-        }
-      }
     };
-  }, [url, handleOpen, handleClose, handleMessage, handleError, reconnectCount]);
+  }, [setupWebSocket]);
 
   return {
     sendMessage,
     lastMessage,
     readyState,
-    reconnectCount,
   };
 }
