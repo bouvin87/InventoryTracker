@@ -7,6 +7,7 @@ import multer from "multer";
 import { z } from "zod";
 import { setupAuth } from "./auth";
 import { db } from "./db";
+import { WebSocketServer, WebSocket } from 'ws';
 
 // Configure multer for file uploads
 const upload = multer({ 
@@ -411,5 +412,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server setup på en separat sökväg för att undvika 
+  // konflikter med Vite HMR som också använder WebSockets
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws' 
+  });
+  
+  // Function to broadcast to all connected WebSocket clients
+  const broadcastUpdate = (data: any) => {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(data));
+      }
+    });
+  };
+  
+  // Setup WebSocket connections
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    
+    // Send a welcome message
+    ws.send(JSON.stringify({ 
+      type: 'connection', 
+      message: 'WebSocket connection established' 
+    }));
+    
+    // Listen for client messages
+    ws.on('message', (message) => {
+      console.log('Received message from client:', message.toString());
+    });
+    
+    // Handle disconnections
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+    });
+  });
+  
+  // Notify WebSocket clients of batch changes
+  const notifyBatchUpdate = () => {
+    // First fetch latest batches
+    storage.getAllBatches().then(batches => {
+      // Then broadcast update to all clients
+      broadcastUpdate({ 
+        type: 'batch_update', 
+        data: batches,
+        timestamp: new Date().toISOString()
+      });
+    }).catch(error => {
+      console.error('Error sending batch update through WebSocket:', error);
+    });
+  };
+  
+  // Modify the routes that change batch data to trigger WebSocket updates
+  const originalMarkBatchAsInventored = storage.markBatchAsInventored;
+  storage.markBatchAsInventored = async function(...args) {
+    const result = await originalMarkBatchAsInventored.apply(this, args);
+    notifyBatchUpdate();
+    return result;
+  };
+  
+  const originalMarkBatchAsPartiallyInventored = storage.markBatchAsPartiallyInventored;
+  storage.markBatchAsPartiallyInventored = async function(...args) {
+    const result = await originalMarkBatchAsPartiallyInventored.apply(this, args);
+    notifyBatchUpdate();
+    return result;
+  };
+  
+  const originalUpdateBatch = storage.updateBatch;
+  storage.updateBatch = async function(...args) {
+    const result = await originalUpdateBatch.apply(this, args);
+    notifyBatchUpdate();
+    return result;
+  };
+  
+  const originalCreateBatch = storage.createBatch;
+  storage.createBatch = async function(...args) {
+    const result = await originalCreateBatch.apply(this, args);
+    notifyBatchUpdate();
+    return result;
+  };
+  
+  const originalImportBatches = storage.importBatches;
+  storage.importBatches = async function(...args) {
+    const result = await originalImportBatches.apply(this, args);
+    notifyBatchUpdate();
+    return result;
+  };
+  
+  const originalClearAllBatches = storage.clearAllBatches;
+  storage.clearAllBatches = async function(...args) {
+    const result = await originalClearAllBatches.apply(this, args);
+    notifyBatchUpdate();
+    return result;
+  };
+  
   return httpServer;
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
@@ -18,6 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useWebSocket, ReadyState } from "@/hooks/use-websocket";
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -35,11 +36,43 @@ export default function Dashboard() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Fetch inventory data
+  // Fetch inventory data via REST API
   const { data: batches, isLoading } = useQuery({
     queryKey: ["/api/batches"],
     select: (data: BatchItem[]) => data || [],
   });
+  
+  // WebSocket connection
+  const { lastMessage, readyState } = useWebSocket('/ws', {
+    onOpen: () => {
+      console.log('WebSocket connected!');
+    },
+    onMessage: (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'batch_update') {
+          console.log('Received batch update via WebSocket');
+          // Uppdatera cache direkt för sömlös uppdatering
+          queryClient.setQueryData(["/api/batches"], data.data);
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    },
+    onError: (event) => {
+      console.error('WebSocket error:', event);
+    }
+  });
+  
+  // Visa toast när WebSocket-anslutningen ändras
+  useEffect(() => {
+    if (readyState === ReadyState.OPEN) {
+      toast({
+        title: "Realtidsuppdateringar aktiverade",
+        description: "Du kommer nu se alla ändringar direkt utan att behöva ladda om sidan",
+      });
+    }
+  }, [readyState]);
 
   // Filter data based on search term and filters
   const filteredBatches =
@@ -390,9 +423,17 @@ export default function Dashboard() {
 
         <div className="px-6 py-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">
-              Batchinventering
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-semibold text-gray-800">
+                Batchinventering
+              </h2>
+              {readyState === ReadyState.OPEN && (
+                <div className="flex items-center text-sm font-medium text-green-600">
+                  <span className="inline-block h-2 w-2 rounded-full bg-green-600 mr-1 animate-pulse"></span>
+                  Realtid
+                </div>
+              )}
+            </div>
 
             {/* Importera och exportera knappar borttagna från huvuddashboard */}
           </div>

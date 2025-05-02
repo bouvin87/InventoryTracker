@@ -60,24 +60,12 @@ export function TopBar({ toggleSidebar, onSearch, onAddBatch }: TopBarProps) {
             <span className="material-icons mr-1 text-sm">add</span>
             Lägg till batch
           </Button>
-
-          <Link href="/settings">
-            <Button 
-              variant="outline"
-              size="sm"
-            >
-              <span className="material-icons text-sm mr-1">settings</span>
-              Inställningar
-            </Button>
-          </Link>
         </div>
       </div>
 
       <div className="border-b border-gray-200 px-6 py-2 flex justify-between items-center">
         <div className="text-sm font-medium">Inventeringssystem</div>
-        <div className="text-sm text-gray-500">
-          Batchinventering
-        </div>
+        <div className="text-sm text-gray-500">Batchinventering</div>
       </div>
     </div>
   );
