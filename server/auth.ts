@@ -32,18 +32,28 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log(`Försöker autentisera användare: ${username}`);
         const user = await storage.getUserByUsername(username);
+        
         if (!user) {
+          console.log(`Autentisering misslyckades: Användaren "${username}" hittades inte`);
           return done(null, false, { message: 'Fel användarnamn eller lösenord' });
         }
         
+        console.log(`Användaren hittades. Validerar lösenord...`);
+        console.log(`Lösenordsinfo: längd=${user.password.length}, innehåller punkt=${user.password.includes('.')}`);
+        
         // För användare i databasen - använd jämförelse av lösenord
-        if (await comparePasswords(password, user.password)) {
+        const passwordMatch = await comparePasswords(password, user.password);
+        if (passwordMatch) {
+          console.log(`Lösenordsjämförelse lyckades för ${username}`);
           return done(null, user);
         } else {
+          console.log(`Lösenordsjämförelse misslyckades för ${username}`);
           return done(null, false, { message: 'Fel användarnamn eller lösenord' });
         }
       } catch (error) {
+        console.error(`Autentiseringsfel för ${username}:`, error);
         return done(error);
       }
     }),

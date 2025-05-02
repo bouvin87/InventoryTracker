@@ -30,20 +30,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Visa användardetaljer (dev only)
+  app.get('/api/debug-users', async (req, res) => {
+    try {
+      const allUsers = await db.select().from(users);
+      res.json(allUsers.map(user => ({
+        id: user.id,
+        username: user.username,
+        passwordStart: user.password.substring(0, 20) + '...',
+        passwordLength: user.password.length,
+        hasPasswordDot: user.password.includes('.'),
+        name: user.name,
+        role: user.role
+      })));
+    } catch (error) {
+      console.error("Error getting debug users:", error);
+      res.status(500).json({ message: "Failed to get debug users" });
+    }
+  });
+  
   // Reset database (dev only)
   app.post('/api/reset-db', async (req, res) => {
     try {
+      console.log("RESET DB: Börjar återställa databasen...");
+      
       // Ta bort alla befintliga användare och batches
       await db.delete(users);
       await db.delete(batches);
       
-      // Återskapa standardanvändare
-      await storage.initializeUsers();
+      console.log("RESET DB: Tabeller rensade, återskapar användare...");
       
-      res.json({ message: "Database has been reset" });
+      // Importera hashPassword direkt
+      const { hashPassword } = await import('./password-utils');
+      
+      // Hasha lösenord för standardanvändare
+      const hashedPassword = await hashPassword("password");
+      console.log("RESET DB: Lösenord hashat: ", hashedPassword.substring(0, 20) + "...");
+      
+      // Skapa användare manuellt
+      await db.insert(users).values([
+        {
+          username: "john",
+          password: hashedPassword,
+          name: "John Doe",
+          role: "Lageransvarig"
+        },
+        {
+          username: "anna",
+          password: hashedPassword,
+          name: "Anna Svensson",
+          role: "Inventerare"
+        }
+      ]);
+      
+      console.log("RESET DB: Användare skapade, skapar exempeldata...");
+      
+      // Skapa exempeldata
+      await storage.initializeSampleBatches();
+      
+      console.log("RESET DB: Reset av databas slutförd");
+      res.json({ message: "Database has been reset", success: true });
     } catch (error) {
       console.error("Error resetting database:", error);
-      res.status(500).json({ message: "Failed to reset database" });
+      res.status(500).json({ message: "Failed to reset database", success: false, error: String(error) });
     }
   });
 
