@@ -53,8 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      return await apiRequest<User>("POST", "/api/login", credentials);
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
@@ -62,6 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Inloggning lyckades",
         description: `Välkommen ${user.name}!`,
       });
+      
+      // Omdirigera till startsidan
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
@@ -74,8 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const directLoginMutation = useMutation({
     mutationFn: async ({ userId }: { userId: number }) => {
-      const res = await apiRequest("POST", `/api/login/user/${userId}`);
-      return await res.json();
+      return await apiRequest<User>("POST", `/api/login/user/${userId}`);
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
@@ -83,6 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Inloggning lyckades",
         description: `Välkommen ${user.name}!`,
       });
+      
+      // Uppdatera sidan för att säkerställa att allt uppdateras korrekt
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
@@ -97,8 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (data: RegisterData) => {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...userData } = data;
-      const res = await apiRequest("POST", "/api/register", userData);
-      return await res.json();
+      return await apiRequest<User>("POST", "/api/register", userData);
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
@@ -106,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registrering lyckades",
         description: `Välkommen ${user.name}!`,
       });
+      
+      // Omdirigera till startsidan
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
