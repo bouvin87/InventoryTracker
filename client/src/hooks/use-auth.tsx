@@ -142,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         loginMutation,
+        directLoginMutation,
         logoutMutation,
         registerMutation,
       }}

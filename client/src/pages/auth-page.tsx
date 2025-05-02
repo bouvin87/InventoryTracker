@@ -16,10 +16,9 @@ interface UserItem {
 }
 
 export default function AuthPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, directLoginMutation } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Hämta alla användare för dropdownen
   const { data: users = [], isLoading: usersLoading } = useQuery<UserItem[]>({
@@ -33,30 +32,15 @@ export default function AuthPage() {
       setLocation("/");
     }
   }, [user, setLocation]);
-
+  
   // Hantera inloggning när användaren väljs
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!selectedUserId) return;
     
-    setIsLoggingIn(true);
-    try {
-      // Använd den nya direktinloggningen med användar-ID
-      const response = await fetch(`/api/login/user/${selectedUserId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Inloggning misslyckades');
-      }
-      
-      // Omladdning uppdaterar useAuth() som sedan omdirigerar till dashboard
-      window.location.reload();
-    } catch (error) {
-      console.error('Inloggningsfel:', error);
-    } finally {
-      setIsLoggingIn(false);
-    }
+    // Använd mutationen för att logga in
+    directLoginMutation.mutate({ 
+      userId: parseInt(selectedUserId) 
+    });
   };
 
   if (isLoading || usersLoading) {
@@ -100,9 +84,12 @@ export default function AuthPage() {
             <Button 
               onClick={handleLogin}
               className="w-full"
-              disabled={!selectedUserId || isLoggingIn}
+              disabled={!selectedUserId || directLoginMutation.isPending}
             >
-              {isLoggingIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <User className="mr-2 h-4 w-4" />}
+              {directLoginMutation.isPending ? 
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 
+                <User className="mr-2 h-4 w-4" />
+              }
               Logga in
             </Button>
           </CardContent>
