@@ -22,8 +22,10 @@ interface DataTableProps {
 export function DataTable({ data, onView, onInventoryComplete, onInventoryPartial, onUndoInventory }: DataTableProps) {
   const [sortField, setSortField] = useState<keyof BatchItem | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [showLocation, setShowLocation] = useState<boolean>(true);
-  const [showUser, setShowUser] = useState<boolean>(true);
+  const [showLocation, setShowLocation] = useState<boolean>(false);
+  const [showUser, setShowUser] = useState<boolean>(false);
+  const [showStatus, setShowStatus] = useState<boolean>(true);
+  const [showInventoried, setShowInventoried] = useState<boolean>(false);
 
   // Handle sorting
   const toggleSort = (field: string) => {
@@ -38,29 +40,49 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
 
   // Sort data
   const sortedData = React.useMemo(() => {
-    if (!sortField) return data;
+    let sortedResults = [...data];
     
-    return [...data].sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-      
-      if (aValue === null || aValue === undefined) return 1;
-      if (bValue === null || bValue === undefined) return -1;
-      
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        if (sortDirection === 'asc') {
-          return aValue.localeCompare(bValue);
-        } else {
-          return bValue.localeCompare(aValue);
+    if (sortField) {
+      // Om användaren har valt en specifik sortering, använd den
+      sortedResults = sortedResults.sort((a, b) => {
+        const aValue = a[sortField];
+        const bValue = b[sortField];
+        
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
+        
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          if (sortDirection === 'asc') {
+            return aValue.localeCompare(bValue);
+          } else {
+            return bValue.localeCompare(aValue);
+          }
         }
-      }
-      
-      if (sortDirection === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
+        
+        if (sortDirection === 'asc') {
+          return aValue > bValue ? 1 : -1;
+        } else {
+          return aValue < bValue ? 1 : -1;
+        }
+      });
+    } else {
+      // Standardsortering: Artikelnummer (primärt), Vikt (sekundärt), Batchnummer (tertiärt)
+      sortedResults = sortedResults.sort((a, b) => {
+        // Primär sortering på artikelnummer
+        const articleComp = a.articleNumber.localeCompare(b.articleNumber);
+        if (articleComp !== 0) return articleComp;
+        
+        // Sekundär sortering på vikt
+        if (a.totalWeight !== b.totalWeight) {
+          return a.totalWeight > b.totalWeight ? -1 : 1; // Högst vikt först
+        }
+        
+        // Tertiär sortering på batchnummer
+        return a.batchNumber.localeCompare(b.batchNumber);
+      });
+    }
+    
+    return sortedResults;
   }, [data, sortField, sortDirection]);
 
   // Get status badge class
@@ -96,7 +118,31 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
       <div className="p-4 border-b flex justify-between items-center">
         <h3 className="text-lg font-medium text-gray-800">Inventeringslista</h3>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-9 px-3"
+            onClick={() => setShowStatus(!showStatus)}
+          >
+            <span className="material-icons mr-1 text-sm">
+              {showStatus ? "visibility_off" : "visibility"}
+            </span>
+            {showStatus ? "Dölj status" : "Visa status"}
+          </Button>
+
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-9 px-3"
+            onClick={() => setShowInventoried(!showInventoried)}
+          >
+            <span className="material-icons mr-1 text-sm">
+              {showInventoried ? "visibility_off" : "visibility"}
+            </span>
+            {showInventoried ? "Dölj inv." : "Visa inv."}
+          </Button>
+          
           <Button 
             variant="outline" 
             size="sm" 
@@ -120,11 +166,6 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
             </span>
             {showUser ? "Dölj användare" : "Visa användare"}
           </Button>
-          
-          <Button variant="outline" size="sm" className="h-9 px-3">
-            <span className="material-icons mr-1 text-sm">refresh</span>
-            Uppdatera
-          </Button>
         </div>
       </div>
       
@@ -132,8 +173,16 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
         <Table className="min-w-full w-max">
           <TableHeader className="bg-gray-50">
             <TableRow>
+              {showStatus && (
+                <TableHead className="whitespace-nowrap" onClick={() => toggleSort('status')}>
+                  Status
+                  <button className="ml-1 text-gray-400">
+                    <span className="material-icons text-sm">unfold_more</span>
+                  </button>
+                </TableHead>
+              )}
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('articleNumber')}>
-                Artikelnummer
+                Artikelnr
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
@@ -153,29 +202,25 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                 </TableHead>
               )}
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('batchNumber')}>
-                Batchnummer
+                Batchnr
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
               <TableHead className="whitespace-nowrap" onClick={() => toggleSort('totalWeight')}>
-                Saldo
+                Vikt
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('inventoredWeight')}>
-                Inv.
-                <button className="ml-1 text-gray-400">
-                  <span className="material-icons text-sm">unfold_more</span>
-                </button>
-              </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('status')}>
-                Status
-                <button className="ml-1 text-gray-400">
-                  <span className="material-icons text-sm">unfold_more</span>
-                </button>
-              </TableHead>
+              {showInventoried && (
+                <TableHead className="whitespace-nowrap" onClick={() => toggleSort('inventoredWeight')}>
+                  Inv. vikt
+                  <button className="ml-1 text-gray-400">
+                    <span className="material-icons text-sm">unfold_more</span>
+                  </button>
+                </TableHead>
+              )}
               {showUser && (
                 <TableHead className="whitespace-nowrap" onClick={() => toggleSort('userName')}>
                   Användare
@@ -192,28 +237,32 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
           <TableBody>
             {sortedData.map((item) => (
               <TableRow key={item.id} className="hover:bg-gray-50">
+                {showStatus && (
+                  <TableCell>
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(item.status)}`}>
+                      {getStatusText(item.status)}
+                    </span>
+                  </TableCell>
+                )}
                 <TableCell className="font-medium">{item.articleNumber}</TableCell>
                 <TableCell>{item.description}</TableCell>
                 {showLocation && <TableCell>{item.location || '--'}</TableCell>}
                 <TableCell>{item.batchNumber}</TableCell>
                 <TableCell>{item.totalWeight} kg</TableCell>
-                <TableCell>
-                  {item.inventoredWeight !== null ? (
-                    <span className={item.inventoredWeight > item.totalWeight ? 'text-orange-600 font-semibold' : ''}>
-                      {item.inventoredWeight} kg
-                      {item.inventoredWeight > item.totalWeight && (
-                        <span className="ml-1 text-orange-600 text-xs" title="Inventerad vikt överstiger ursprunglig totalvikt">
-                          ⚠️
-                        </span>
-                      )}
-                    </span>
-                  ) : '--'}
-                </TableCell>
-                <TableCell>
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(item.status)}`}>
-                    {getStatusText(item.status)}
-                  </span>
-                </TableCell>
+                {showInventoried && (
+                  <TableCell>
+                    {item.inventoredWeight !== null ? (
+                      <span className={item.inventoredWeight > item.totalWeight ? 'text-orange-600 font-semibold' : ''}>
+                        {item.inventoredWeight} kg
+                        {item.inventoredWeight > item.totalWeight && (
+                          <span className="ml-1 text-orange-600 text-xs" title="Inventerad vikt överstiger ursprunglig totalvikt">
+                            ⚠️
+                          </span>
+                        )}
+                      </span>
+                    ) : '--'}
+                  </TableCell>
+                )}
                 {showUser && (
                   <TableCell>
                     {item.userName || '--'}
