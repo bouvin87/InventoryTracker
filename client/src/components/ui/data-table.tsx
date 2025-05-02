@@ -77,48 +77,37 @@ export function DataTable({
         }
       });
     } else {
-      // Definiera sorteringsordning i array: [artikelnummer, vikt (fallande), batchnummer]
-      const sortOrder: Array<{
-        field: keyof BatchItem;
-        direction: 'asc' | 'desc';
-        type: 'string' | 'number';
-      }> = [
-        { field: 'articleNumber', direction: 'asc', type: 'string' },
-        { field: 'totalWeight', direction: 'desc', type: 'number' },
-        { field: 'batchNumber', direction: 'asc', type: 'string' }
-      ];
+      // Steg 1: Gruppera batches efter artikelnummer
+      const articleGroups: Record<string, BatchItem[]> = {};
       
-      // Tillämpa sortering i angiven ordning
-      sortedResults.sort((a, b) => {
-        // Gå igenom varje sorteringskriterium tills vi hittar en skillnad
-        for (const sort of sortOrder) {
-          const aValue = a[sort.field];
-          const bValue = b[sort.field];
-          
-          // Hantera null och undefined
-          if (aValue === null || aValue === undefined) return 1;
-          if (bValue === null || bValue === undefined) return -1;
-          
-          // Sortera baserat på typ
-          if (sort.type === 'string') {
-            const comparison = String(aValue).localeCompare(String(bValue));
-            if (comparison !== 0) {
-              return sort.direction === 'asc' ? comparison : -comparison;
-            }
-          } else {
-            // Numerisk sortering
-            const aNum = Number(aValue);
-            const bNum = Number(bValue);
-            if (aNum !== bNum) {
-              return sort.direction === 'asc' 
-                ? aNum - bNum 
-                : bNum - aNum;
-            }
-          }
+      sortedResults.forEach(batch => {
+        const articleNumber = batch.articleNumber;
+        if (!articleGroups[articleNumber]) {
+          articleGroups[articleNumber] = [];
         }
-        
-        // Om alla fält är identiska, behåll befintlig ordning
-        return 0;
+        articleGroups[articleNumber].push(batch);
+      });
+      
+      // Steg 2: Sortera varje grupp efter vikt (fallande) och sedan batchnummer
+      Object.keys(articleGroups).forEach(articleNumber => {
+        articleGroups[articleNumber].sort((a, b) => {
+          // Primär sortering på vikt (högst först)
+          if (a.totalWeight !== b.totalWeight) {
+            return b.totalWeight - a.totalWeight;
+          }
+          
+          // Sekundär sortering på batchnummer
+          return a.batchNumber.localeCompare(b.batchNumber);
+        });
+      });
+      
+      // Steg 3: Sortera artikelnummer i stigande ordning
+      const sortedArticleNumbers = Object.keys(articleGroups).sort();
+      
+      // Steg 4: Flata ut resultatet tillbaka till en array
+      sortedResults = [];
+      sortedArticleNumbers.forEach(articleNumber => {
+        sortedResults.push(...articleGroups[articleNumber]);
       });
     }
 
