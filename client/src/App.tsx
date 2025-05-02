@@ -9,16 +9,20 @@ import Import from "@/pages/import";
 import Export from "@/pages/export";
 import Settings from "@/pages/settings";
 import Help from "@/pages/help";
+import AuthPage from "@/pages/auth-page";
 import { useEffect, useState } from "react";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/import" component={Import} />
-      <Route path="/export" component={Export} />
-      <Route path="/settings" component={Settings} />
-      <Route path="/help" component={Help} />
+      <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/import" component={Import} />
+      <ProtectedRoute path="/export" component={Export} />
+      <ProtectedRoute path="/settings" component={Settings} />
+      <ProtectedRoute path="/help" component={Help} />
+      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -44,10 +48,12 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
