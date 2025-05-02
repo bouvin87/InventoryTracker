@@ -42,7 +42,7 @@ export default function Dashboard() {
     select: (data: BatchItem[]) => data || [],
   });
   
-  // WebSocket connection
+  // WebSocket connection - optimerad för mindre resursutnyttjande
   const { lastMessage, readyState } = useWebSocket('/ws', {
     onOpen: () => {
       console.log('WebSocket connected!');
@@ -51,9 +51,20 @@ export default function Dashboard() {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'batch_update') {
-          console.log('Received batch update via WebSocket');
-          // Uppdatera cache direkt för sömlös uppdatering
-          queryClient.setQueryData(["/api/batches"], data.data);
+          if (data.data && Array.isArray(data.data)) {
+            // Uppdatera cache direkt för sömlös uppdatering
+            queryClient.setQueryData(["/api/batches"], data.data);
+            
+            // Logga endast i utvecklingsläge
+            if (import.meta.env.DEV) {
+              console.log(`Received batch update via WebSocket (${data.data.length} items)`);
+            }
+          }
+        } else if (data.type === 'connection') {
+          // Logga endast i utvecklingsläge
+          if (import.meta.env.DEV) {
+            console.log('WebSocket welcome message:', data.message);
+          }
         }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
@@ -64,15 +75,17 @@ export default function Dashboard() {
     }
   });
   
-  // Visa toast när WebSocket-anslutningen ändras
+  // Visa toast när WebSocket-anslutningen ändras - men bara första gången
+  const [hasShownConnectedToast, setHasShownConnectedToast] = useState(false);
   useEffect(() => {
-    if (readyState === ReadyState.OPEN) {
+    if (readyState === ReadyState.OPEN && !hasShownConnectedToast) {
+      setHasShownConnectedToast(true);
       toast({
         title: "Realtidsuppdateringar aktiverade",
         description: "Du kommer nu se alla ändringar direkt utan att behöva ladda om sidan",
       });
     }
-  }, [readyState]);
+  }, [readyState, hasShownConnectedToast, toast]);
 
   // Filter data based on search term and filters
   const filteredBatches =

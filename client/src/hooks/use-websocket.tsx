@@ -26,8 +26,8 @@ export function useWebSocket(
     onClose,
     onMessage,
     onError,
-    reconnectInterval = 3000,
-    reconnectAttempts = 10,
+    reconnectInterval = 10000, // Öka till 10 sekunder för att minska antalet återanslutningar
+    reconnectAttempts = 5, // Minska antalet försök
     shouldReconnect = true,
   } = options;
 
@@ -79,11 +79,30 @@ export function useWebSocket(
 
   // Anslut websocket
   useEffect(() => {
+    // Förhindra onödiga anslutningar under utveckling
+    if (import.meta.env.DEV) {
+      console.log('Initierar WebSocket-anslutning');
+    }
+    
     // Skapa WebSocket med korrekt protokoll (ws/wss)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = url.startsWith('ws:') || url.startsWith('wss:') 
       ? url 
       : `${protocol}//${window.location.host}${url}`;
+    
+    // Återanvänd befintlig WebSocket om den fortfarande är öppen
+    if (socketRef.current?.readyState === ReadyState.OPEN) {
+      return;
+    }
+    
+    // Rensa gamla anslutningar
+    if (socketRef.current) {
+      try {
+        socketRef.current.close();
+      } catch (err) {
+        // Ignorera eventuella fel vid stängning
+      }
+    }
     
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;

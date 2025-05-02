@@ -13,7 +13,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 30 * 1024 * 1024, // 30MB limit - utökad för att hantera större Excel-filer
   },
 });
 
@@ -451,18 +451,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Notify WebSocket clients of batch changes
+  // Throttle-funktion för att förhindra för många uppdateringar på kort tid
+  let updateTimeout: NodeJS.Timeout | null = null;
+  const throttleTime = 500; // 500ms
+  
   const notifyBatchUpdate = () => {
-    // First fetch latest batches
-    storage.getAllBatches().then(batches => {
-      // Then broadcast update to all clients
-      broadcastUpdate({ 
-        type: 'batch_update', 
-        data: batches,
-        timestamp: new Date().toISOString()
+    // Om en uppdatering redan är planerad, gör ingenting
+    if (updateTimeout) {
+      return;
+    }
+    
+    // Planera en uppdatering
+    updateTimeout = setTimeout(() => {
+      // First fetch latest batches
+      storage.getAllBatches().then(batches => {
+        // Then broadcast update to all clients
+        broadcastUpdate({ 
+          type: 'batch_update', 
+          data: batches,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Återställ timeout
+        updateTimeout = null;
+      }).catch(error => {
+        console.error('Error sending batch update through WebSocket:', error);
+        // Återställ timeout även vid fel
+        updateTimeout = null;
       });
-    }).catch(error => {
-      console.error('Error sending batch update through WebSocket:', error);
-    });
+    }, throttleTime);
   };
   
   // Modify the routes that change batch data to trigger WebSocket updates
