@@ -17,7 +17,7 @@ import { BatchItem, UpdateBatchItem, InsertBatch } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { getCurrentUser } from "@/lib/userStore";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -33,6 +33,7 @@ export default function Dashboard() {
   });
 
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Fetch inventory data
   const { data: batches, isLoading } = useQuery({
@@ -265,9 +266,6 @@ export default function Dashboard() {
 
   const handleInventoryComplete = async (batch: BatchItem) => {
     try {
-      // Hämta den aktuella användaren
-      const currentUser = getCurrentUser();
-
       // Vi skickar med location om den finns, annars lämnar vi den odefinierad
       const payload: {
         id: number;
@@ -276,8 +274,8 @@ export default function Dashboard() {
         userName: string;
       } = {
         id: batch.id,
-        userId: currentUser.id,
-        userName: currentUser.name,
+        userId: user?.id || 0,
+        userName: user?.name || 'Okänd användare',
       };
 
       if (batch.location) {
@@ -304,15 +302,12 @@ export default function Dashboard() {
     weight: number,
     location: string,
   ) => {
-    // Hämta den aktuella användaren
-    const currentUser = getCurrentUser();
-
     await partialInventoryMutation.mutateAsync({
       id,
       weight,
       location,
-      userId: currentUser.id,
-      userName: currentUser.name,
+      userId: user?.id || 0,
+      userName: user?.name || 'Okänd användare',
     });
   };
 
@@ -356,14 +351,11 @@ export default function Dashboard() {
 
       // Om den ska markeras som inventerad direkt
       if (markAsInventoried && newBatch) {
-        // Hämta den aktuella användaren
-        const currentUser = getCurrentUser();
-
         await completeInventoryMutation.mutateAsync({
           id: newBatch.id,
           location: data.location || undefined,
-          userId: currentUser.id,
-          userName: currentUser.name,
+          userId: user?.id || 0,
+          userName: user?.name || 'Okänd användare',
         });
       }
     } catch (error) {
