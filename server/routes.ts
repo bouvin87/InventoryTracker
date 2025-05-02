@@ -442,9 +442,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Send a welcome message
     ws.send(JSON.stringify({ 
-      type: 'connection', 
+      type: 'welcome', 
       message: 'WebSocket connection established' 
     }));
+    
+    // Send initial data immediately after connection
+    storage.getAllBatches().then(batches => {
+      ws.send(JSON.stringify({
+        type: 'batch_update',
+        data: batches,
+        timestamp: new Date().toISOString()
+      }));
+    }).catch(error => {
+      console.error('Error sending initial data via WebSocket:', error);
+    });
     
     // Listen for client messages
     ws.on('message', (message) => {

@@ -42,7 +42,8 @@ export default function Dashboard() {
     select: (data: BatchItem[]) => data || [],
   });
   
-  // WebSocket connection - optimerad för mindre resursutnyttjande
+  // WebSocket connection för realtidsuppdateringar
+  const [updatedRecently, setUpdatedRecently] = useState(false);
   const { lastMessage, readyState } = useWebSocket('/ws', {
     onOpen: () => {
       console.log('WebSocket connected!');
@@ -50,20 +51,25 @@ export default function Dashboard() {
     onMessage: (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'batch_update') {
-          if (data.data && Array.isArray(data.data)) {
-            // Uppdatera cache direkt för sömlös uppdatering
-            queryClient.setQueryData(["/api/batches"], data.data);
-            
-            // Logga endast i utvecklingsläge
-            if (import.meta.env.DEV) {
-              console.log(`Received batch update via WebSocket (${data.data.length} items)`);
-            }
-          }
-        } else if (data.type === 'connection') {
-          // Logga endast i utvecklingsläge
+        
+        // Hantera välkomstmeddelande
+        if (data.type === 'welcome') {
+          console.log('WebSocket welcome message:', data.message);
+          return;
+        }
+        
+        // Hantera batchuppdateringar
+        if (data.type === 'batch_update' && data.data && Array.isArray(data.data)) {
+          // Uppdatera cache direkt för sömlös uppdatering
+          queryClient.setQueryData(["/api/batches"], data.data);
+          
+          // Visa temporär visuell indikation att data har uppdaterats
+          setUpdatedRecently(true);
+          setTimeout(() => setUpdatedRecently(false), 2000);
+          
+          // Logga information i utvecklingsläge
           if (import.meta.env.DEV) {
-            console.log('WebSocket welcome message:', data.message);
+            console.log(`Realtidsuppdatering: ${data.data.length} poster mottagna`);
           }
         }
       } catch (error) {
@@ -441,9 +447,9 @@ export default function Dashboard() {
                 Batchinventering
               </h2>
               {readyState === ReadyState.OPEN && (
-                <div className="flex items-center text-sm font-medium text-green-600">
-                  <span className="inline-block h-2 w-2 rounded-full bg-green-600 mr-1 animate-pulse"></span>
-                  Realtid
+                <div className={`flex items-center text-sm font-medium ${updatedRecently ? 'text-primary' : 'text-green-600'}`}>
+                  <span className={`inline-block h-2 w-2 rounded-full ${updatedRecently ? 'bg-primary' : 'bg-green-600'} mr-1 animate-pulse`}></span>
+                  {updatedRecently ? 'Uppdaterad' : 'Realtid'}
                 </div>
               )}
             </div>
