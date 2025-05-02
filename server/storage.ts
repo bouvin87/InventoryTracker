@@ -40,29 +40,35 @@ export class DatabaseStorage implements IStorage {
     const usersResult = await db.select().from(users);
     
     if (usersResult.length === 0) {
+      // Importera hashPassword-funktion
+      const { hashPassword } = await import('./password-utils');
+      
+      // Hasha lösenord för standardanvändare
+      const hashedPassword = await hashPassword("password");
+      
       // Lägg till standardanvändare
       await db.insert(users).values([
         {
           username: "john",
-          password: "password",
+          password: hashedPassword,
           name: "John Doe",
           role: "Lageransvarig"
         },
         {
           username: "anna",
-          password: "password",
+          password: hashedPassword,
           name: "Anna Svensson",
           role: "Inventerare"
         },
         {
           username: "erik",
-          password: "password",
+          password: hashedPassword,
           name: "Erik Johansson",
           role: "Inventerare"
         },
         {
           username: "maria",
-          password: "password",
+          password: hashedPassword,
           name: "Maria Larsson",
           role: "Lageransvarig"
         }
