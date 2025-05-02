@@ -34,6 +34,7 @@ export function TopBar({ toggleSidebar, onSearch, onAddBatch }: TopBarProps) {
           </h1>
         </div>
 
+        {/* På större skärmar: sökfält till vänster */}
         <div className="hidden md:flex items-center flex-1">
           <div className="relative w-64">
             <Input
@@ -60,6 +61,24 @@ export function TopBar({ toggleSidebar, onSearch, onAddBatch }: TopBarProps) {
             <span className="material-icons mr-1 text-sm">add</span>
             Lägg till batch
           </Button>
+        </div>
+      </div>
+
+      {/* Lägg till sökfält i mobilvy */}
+      <div className="md:hidden px-6 py-2 border-b border-gray-200">
+        <div className="relative w-full">
+          <Input
+            type="text"
+            placeholder="Sök..."
+            className="h-9 pl-10 bg-gray-100 border-transparent w-full"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="material-icons text-gray-400 text-lg">
+              search
+            </span>
+          </div>
         </div>
       </div>
 
