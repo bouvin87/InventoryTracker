@@ -9,7 +9,12 @@ import {
 } from "@/components/ui/table";
 import { BatchItem } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DataTableProps {
   data: BatchItem[];
@@ -19,9 +24,15 @@ interface DataTableProps {
   onUndoInventory?: (item: BatchItem) => void;
 }
 
-export function DataTable({ data, onView, onInventoryComplete, onInventoryPartial, onUndoInventory }: DataTableProps) {
+export function DataTable({
+  data,
+  onView,
+  onInventoryComplete,
+  onInventoryPartial,
+  onUndoInventory,
+}: DataTableProps) {
   const [sortField, setSortField] = useState<keyof BatchItem | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [showLocation, setShowLocation] = useState<boolean>(false);
   const [showUser, setShowUser] = useState<boolean>(false);
   const [showStatus, setShowStatus] = useState<boolean>(true);
@@ -31,35 +42,35 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
   const toggleSort = (field: string) => {
     const batchField = field as keyof BatchItem;
     if (sortField === batchField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(batchField);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
   // Sort data
   const sortedData = React.useMemo(() => {
     let sortedResults = [...data];
-    
+
     if (sortField) {
       // Om användaren har valt en specifik sortering, använd den
       sortedResults = sortedResults.sort((a, b) => {
         const aValue = a[sortField];
         const bValue = b[sortField];
-        
+
         if (aValue === null || aValue === undefined) return 1;
         if (bValue === null || bValue === undefined) return -1;
-        
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          if (sortDirection === 'asc') {
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          if (sortDirection === "asc") {
             return aValue.localeCompare(bValue);
           } else {
             return bValue.localeCompare(aValue);
           }
         }
-        
-        if (sortDirection === 'asc') {
+
+        if (sortDirection === "asc") {
           return aValue > bValue ? 1 : -1;
         } else {
           return aValue < bValue ? 1 : -1;
@@ -71,57 +82,60 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
         // Primär sortering på artikelnummer
         const articleComp = a.articleNumber.localeCompare(b.articleNumber);
         if (articleComp !== 0) return articleComp;
-        
+
         // Sekundär sortering på vikt
         if (a.totalWeight !== b.totalWeight) {
           return a.totalWeight > b.totalWeight ? -1 : 1; // Högst vikt först
         }
-        
+
         // Tertiär sortering på batchnummer
         return a.batchNumber.localeCompare(b.batchNumber);
       });
     }
-    
+
     return sortedResults;
   }, [data, sortField, sortDirection]);
 
   // Get status badge class
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'partially_completed':
-        return 'bg-blue-100 text-blue-800';
-      case 'not_started':
-        return 'bg-gray-100 text-gray-800';
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "partially_completed":
+        return "bg-blue-100 text-blue-800";
+      case "not_started":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   // Get status text
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'Inventerad';
-      case 'partially_completed':
-        return 'Delvis inventerad';
-      case 'not_started':
-        return 'Ej påbörjad';
+      case "completed":
+        return "Inventerad";
+      case "partially_completed":
+        return "Delvis inventerad";
+      case "not_started":
+        return "Ej påbörjad";
       default:
         return status;
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden" style={{ maxWidth: '100%' }}>
+    <div
+      className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
+      style={{ maxWidth: "100%" }}
+    >
       <div className="p-4 border-b flex justify-between items-center">
         <h3 className="text-lg font-medium text-gray-800">Inventeringslista</h3>
-        
+
         <div className="flex gap-2 flex-wrap">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-9 px-3"
             onClick={() => setShowStatus(!showStatus)}
           >
@@ -131,9 +145,9 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
             {showStatus ? "Dölj status" : "Visa status"}
           </Button>
 
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-9 px-3"
             onClick={() => setShowInventoried(!showInventoried)}
           >
@@ -142,10 +156,10 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
             </span>
             {showInventoried ? "Dölj inv." : "Visa inv."}
           </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
+
+          <Button
+            variant="outline"
+            size="sm"
             className="h-9 px-3"
             onClick={() => setShowLocation(!showLocation)}
           >
@@ -154,10 +168,10 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
             </span>
             {showLocation ? "Dölj lagerplats" : "Visa lagerplats"}
           </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
+
+          <Button
+            variant="outline"
+            size="sm"
             className="h-9 px-3"
             onClick={() => setShowUser(!showUser)}
           >
@@ -168,53 +182,74 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
           </Button>
         </div>
       </div>
-      
-      <div className="overflow-x-auto" style={{ overflowX: 'scroll' }}>
+
+      <div className="overflow-x-auto" style={{ overflowX: "scroll" }}>
         <Table className="min-w-full w-max">
           <TableHeader className="bg-gray-50">
             <TableRow>
               {showStatus && (
-                <TableHead className="whitespace-nowrap" onClick={() => toggleSort('status')}>
+                <TableHead
+                  className="whitespace-nowrap"
+                  onClick={() => toggleSort("status")}
+                >
                   Status
                   <button className="ml-1 text-gray-400">
                     <span className="material-icons text-sm">unfold_more</span>
                   </button>
                 </TableHead>
               )}
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('articleNumber')}>
+              <TableHead
+                className="whitespace-nowrap"
+                onClick={() => toggleSort("articleNumber")}
+              >
                 Artikelnr
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('description')}>
+              <TableHead
+                className="whitespace-nowrap"
+                onClick={() => toggleSort("description")}
+              >
                 Beskrivning
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
               {showLocation && (
-                <TableHead className="whitespace-nowrap" onClick={() => toggleSort('location')}>
+                <TableHead
+                  className="whitespace-nowrap"
+                  onClick={() => toggleSort("location")}
+                >
                   Lagerplats
                   <button className="ml-1 text-gray-400">
                     <span className="material-icons text-sm">unfold_more</span>
                   </button>
                 </TableHead>
               )}
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('batchNumber')}>
+              <TableHead
+                className="whitespace-nowrap"
+                onClick={() => toggleSort("batchNumber")}
+              >
                 Batchnr
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
-              <TableHead className="whitespace-nowrap" onClick={() => toggleSort('totalWeight')}>
+              <TableHead
+                className="whitespace-nowrap"
+                onClick={() => toggleSort("totalWeight")}
+              >
                 Vikt
                 <button className="ml-1 text-gray-400">
                   <span className="material-icons text-sm">unfold_more</span>
                 </button>
               </TableHead>
               {showInventoried && (
-                <TableHead className="whitespace-nowrap" onClick={() => toggleSort('inventoredWeight')}>
+                <TableHead
+                  className="whitespace-nowrap"
+                  onClick={() => toggleSort("inventoredWeight")}
+                >
                   Inv. vikt
                   <button className="ml-1 text-gray-400">
                     <span className="material-icons text-sm">unfold_more</span>
@@ -222,7 +257,10 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                 </TableHead>
               )}
               {showUser && (
-                <TableHead className="whitespace-nowrap" onClick={() => toggleSort('userName')}>
+                <TableHead
+                  className="whitespace-nowrap"
+                  onClick={() => toggleSort("userName")}
+                >
                   Användare
                   <button className="ml-1 text-gray-400">
                     <span className="material-icons text-sm">unfold_more</span>
@@ -239,46 +277,63 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
               <TableRow key={item.id} className="hover:bg-gray-50">
                 {showStatus && (
                   <TableCell>
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(item.status)}`}>
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(item.status)}`}
+                    >
                       {getStatusText(item.status)}
                     </span>
                   </TableCell>
                 )}
-                <TableCell className="font-medium">{item.articleNumber}</TableCell>
+                <TableCell className="font-medium">
+                  {item.articleNumber}
+                </TableCell>
                 <TableCell>{item.description}</TableCell>
-                {showLocation && <TableCell>{item.location || '--'}</TableCell>}
+                {showLocation && <TableCell>{item.location || "--"}</TableCell>}
                 <TableCell>{item.batchNumber}</TableCell>
                 <TableCell>{item.totalWeight} kg</TableCell>
                 {showInventoried && (
                   <TableCell>
                     {item.inventoredWeight !== null ? (
-                      <span className={item.inventoredWeight > item.totalWeight ? 'text-orange-600 font-semibold' : ''}>
+                      <span
+                        className={
+                          item.inventoredWeight > item.totalWeight
+                            ? "text-orange-600 font-semibold"
+                            : ""
+                        }
+                      >
                         {item.inventoredWeight} kg
                         {item.inventoredWeight > item.totalWeight && (
-                          <span className="ml-1 text-orange-600 text-xs" title="Inventerad vikt överstiger ursprunglig totalvikt">
+                          <span
+                            className="ml-1 text-orange-600 text-xs"
+                            title="Inventerad vikt överstiger ursprunglig totalvikt"
+                          >
                             ⚠️
                           </span>
                         )}
                       </span>
-                    ) : '--'}
+                    ) : (
+                      "--"
+                    )}
                   </TableCell>
                 )}
-                {showUser && (
-                  <TableCell>
-                    {item.userName || '--'}
-                  </TableCell>
-                )}
+                {showUser && <TableCell>{item.userName || "--"}</TableCell>}
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    
                     {/* Inventering/Delvis inventering för ej påbörjade */}
-                    {item.status === 'not_started' && (
+                    {item.status === "not_started" && (
                       <>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => onInventoryComplete(item)}>
-                                <span className="material-icons text-sm">check_circle</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-green-600"
+                                onClick={() => onInventoryComplete(item)}
+                              >
+                                <span className="material-icons text-sm">
+                                  check_circle
+                                </span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -290,8 +345,15 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onInventoryPartial(item)}>
-                                <span className="material-icons text-sm">indeterminate_check_box</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-blue-600"
+                                onClick={() => onInventoryPartial(item)}
+                              >
+                                <span className="material-icons text-sm">
+                                  indeterminate_check_box
+                                </span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -301,15 +363,22 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                         </TooltipProvider>
                       </>
                     )}
-                    
+
                     {/* Fortsätt inventera för delvis inventerade */}
-                    {item.status === 'partially_completed' && (
+                    {item.status === "partially_completed" && (
                       <>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => onInventoryComplete(item)}>
-                                <span className="material-icons text-sm">check_circle</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-green-600"
+                                onClick={() => onInventoryComplete(item)}
+                              >
+                                <span className="material-icons text-sm">
+                                  check_circle
+                                </span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -321,8 +390,15 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onInventoryPartial(item)}>
-                                <span className="material-icons text-sm">add</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-blue-600"
+                                onClick={() => onInventoryPartial(item)}
+                              >
+                                <span className="material-icons text-sm">
+                                  add
+                                </span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -332,22 +408,31 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
                         </TooltipProvider>
                       </>
                     )}
-                    
+
                     {/* Ångra-knapp för inventerade eller delvis inventerade */}
-                    {(item.status === 'completed' || item.status === 'partially_completed') && onUndoInventory && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => onUndoInventory(item)}>
-                              <span className="material-icons text-sm">undo</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Ångra inventering</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                    {(item.status === "completed" ||
+                      item.status === "partially_completed") &&
+                      onUndoInventory && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-600"
+                                onClick={() => onUndoInventory(item)}
+                              >
+                                <span className="material-icons text-sm">
+                                  undo
+                                </span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Ångra inventering</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -355,12 +440,13 @@ export function DataTable({ data, onView, onInventoryComplete, onInventoryPartia
           </TableBody>
         </Table>
       </div>
-      
+
       <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
         <div className="flex-1 flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-700">
-              Visar alla <span className="font-medium">{sortedData.length}</span> poster
+              Visar alla{" "}
+              <span className="font-medium">{sortedData.length}</span> poster
             </p>
           </div>
         </div>
