@@ -332,9 +332,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Store batches
-      await storage.importBatches(validBatches, overwrite);
+      const importedBatches = await storage.importBatches(validBatches, overwrite);
       
-      res.json({ message: "Import successful", count: validBatches.length });
+      // Explicitly trigger a WebSocket update after import completes
+      notifyBatchUpdate();
+      
+      res.json({ 
+        message: "Import successful", 
+        count: validBatches.length,
+        success: true 
+      });
     } catch (error) {
       console.error("Import error:", error);
       res.status(500).json({ message: "Failed to import Excel file", error: error instanceof Error ? error.message : String(error) });
