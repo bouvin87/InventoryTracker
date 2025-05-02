@@ -24,7 +24,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/users', async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(users);
+      // Returnera bara nödvändig information för dropdown (uteslut lösenord)
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        role: user.role
+      }));
+      res.json(safeUsers);
     } catch (error) {
       res.status(500).json({ message: "Failed to get users" });
     }

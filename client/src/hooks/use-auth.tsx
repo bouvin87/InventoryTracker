@@ -10,6 +10,7 @@ type AuthContextType = {
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<User, Error, LoginData>;
+  directLoginMutation: UseMutationResult<User, Error, {userId: number}>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
 };
@@ -66,6 +67,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Inloggning misslyckades",
         description: error.message || "Fel användarnamn eller lösenord",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const directLoginMutation = useMutation({
+    mutationFn: async ({ userId }: { userId: number }) => {
+      const res = await apiRequest("POST", `/api/login/user/${userId}`);
+      return await res.json();
+    },
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Inloggning lyckades",
+        description: `Välkommen ${user.name}!`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Inloggning misslyckades",
+        description: error.message || "Kunde inte logga in med valt användar-ID",
         variant: "destructive",
       });
     },

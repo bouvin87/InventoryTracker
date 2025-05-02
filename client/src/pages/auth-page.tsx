@@ -1,56 +1,65 @@
 import { useState, useEffect } from "react";
-import { useAuth, loginSchema, registerSchema, type RegisterData } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, User } from "lucide-react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Definiera typen för användare som kommer från API
+interface UserItem {
+  id: number;
+  username: string;
+  name: string;
+  role: string;
+}
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const [tab, setTab] = useState("login");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Redirect to dashboard if already logged in
+  // Hämta alla användare för dropdownen
+  const { data: users = [], isLoading: usersLoading } = useQuery<UserItem[]>({
+    queryKey: ['/api/users'],
+    staleTime: 30000, // 30 sekunder cache
+  });
+
+  // Redirect till dashboard om redan inloggad
   useEffect(() => {
     if (user) {
       setLocation("/");
     }
   }, [user, setLocation]);
 
-  const loginForm = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
+  // Hantera inloggning när användaren väljs
+  const handleLogin = async () => {
+    if (!selectedUserId) return;
+    
+    setIsLoggingIn(true);
+    try {
+      // Använd den nya direktinloggningen med användar-ID
+      const response = await fetch(`/api/login/user/${selectedUserId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Inloggning misslyckades');
+      }
+      
+      // Omladdning uppdaterar useAuth() som sedan omdirigerar till dashboard
+      window.location.reload();
+    } catch (error) {
+      console.error('Inloggningsfel:', error);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
-  const registerForm = useForm({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: "",
-      name: "",
-      password: "",
-      confirmPassword: "",
-      role: "Inventerare",
-    },
-  });
-
-  function onLoginSubmit(values: { username: string; password: string }) {
-    loginMutation.mutate(values);
-  }
-
-  function onRegisterSubmit(values: RegisterData) {
-    registerMutation.mutate(values);
-  }
-
-  if (isLoading) {
+  if (isLoading || usersLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-border" />
@@ -60,173 +69,43 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Login/Register Form */}
+      {/* Användarväljare */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-2xl font-bold">Inventariesystem</CardTitle>
             <CardDescription>
-              Logga in för att fortsätta.
+              Välj vem du är för att fortsätta
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login" value={tab} onValueChange={setTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Logga in</TabsTrigger>
-                <TabsTrigger value="register">Skapa konto</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login">
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                    <FormField
-                      control={loginForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Användarnamn</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ange användarnamn" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Lösenord</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Ange lösenord" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Logga in
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-
-              <TabsContent value="register">
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                    <FormField
-                      control={registerForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Användarnamn</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Välj användarnamn" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Namn</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ange ditt namn" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Roll</FormLabel>
-                          <FormControl>
-                            <select
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                              {...field}
-                            >
-                              <option value="Inventerare">Inventerare</option>
-                              <option value="Lageransvarig">Lageransvarig</option>
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Lösenord</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Välj lösenord" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={registerForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bekräfta lösenord</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Bekräfta lösenord" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Skapa konto
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-            </Tabs>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="user-select" className="text-sm font-medium">
+                Välj användare
+              </label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger id="user-select" className="w-full">
+                  <SelectValue placeholder="Välj användare" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      {user.name} ({user.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Button 
+              onClick={handleLogin}
+              className="w-full"
+              disabled={!selectedUserId || isLoggingIn}
+            >
+              {isLoggingIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <User className="mr-2 h-4 w-4" />}
+              Logga in
+            </Button>
           </CardContent>
-          <CardFooter className="justify-center text-sm">
-            {tab === "login" ? (
-              <p>
-                Har du inget konto?{" "}
-                <a
-                  className="text-blue-600 hover:underline cursor-pointer"
-                  onClick={() => setTab("register")}
-                >
-                  Skapa ett här
-                </a>
-              </p>
-            ) : (
-              <p>
-                Har du redan ett konto?{" "}
-                <a
-                  className="text-blue-600 hover:underline cursor-pointer"
-                  onClick={() => setTab("login")}
-                >
-                  Logga in här
-                </a>
-              </p>
-            )}
-          </CardFooter>
         </Card>
       </div>
 
@@ -281,7 +160,7 @@ export default function AuthPage() {
               >
                 <path d="M5 13l4 4L19 7"></path>
               </svg>
-              Hantera olika användare och roller
+              Enkel användarväljare utan lösenord
             </li>
             <li className="flex items-center">
               <svg

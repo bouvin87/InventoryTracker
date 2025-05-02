@@ -30,30 +30,25 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({
+      // Ignorera lösenordsfältet
+      passReqToCallback: true,
+      passwordField: '__no_password__'
+    }, async (req, username, _password, done) => {
       try {
-        console.log(`Försöker autentisera användare: ${username}`);
+        console.log(`Väljer användare: ${username}`);
         const user = await storage.getUserByUsername(username);
         
         if (!user) {
-          console.log(`Autentisering misslyckades: Användaren "${username}" hittades inte`);
-          return done(null, false, { message: 'Fel användarnamn eller lösenord' });
+          console.log(`Användaren "${username}" hittades inte`);
+          return done(null, false, { message: 'Användaren kunde inte hittas' });
         }
         
-        console.log(`Användaren hittades. Validerar lösenord...`);
-        console.log(`Lösenordsinfo: längd=${user.password.length}, innehåller punkt=${user.password.includes('.')}`);
-        
-        // För användare i databasen - använd jämförelse av lösenord
-        const passwordMatch = await comparePasswords(password, user.password);
-        if (passwordMatch) {
-          console.log(`Lösenordsjämförelse lyckades för ${username}`);
-          return done(null, user);
-        } else {
-          console.log(`Lösenordsjämförelse misslyckades för ${username}`);
-          return done(null, false, { message: 'Fel användarnamn eller lösenord' });
-        }
+        // Godkänn användaren direkt utan lösenordskontroll
+        console.log(`Användare vald: ${user.name} (${user.role})`);
+        return done(null, user);
       } catch (error) {
-        console.error(`Autentiseringsfel för ${username}:`, error);
+        console.error(`Fel vid användarval: ${error}`);
         return done(error);
       }
     }),
@@ -93,16 +88,37 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Logga in med användarnamn (för dropdown)
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: Express.User | false, info: { message?: string }) => {
       if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info?.message || 'Fel användarnamn eller lösenord' });
+      if (!user) return res.status(401).json({ message: info?.message || 'Användaren hittades inte' });
       
       req.login(user, (err: any) => {
         if (err) return next(err);
         res.status(200).json(user);
       });
     })(req, res, next);
+  });
+  
+  // Logga in direkt med användar-ID (för enkel inloggning utan lösenord)
+  app.post("/api/login/user/:id", async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Användaren hittades inte" });
+      }
+      
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(200).json(user);
+      });
+    } catch (error) {
+      console.error("Error in direct login:", error);
+      next(error);
+    }
   });
 
   app.post("/api/logout", (req, res, next) => {
