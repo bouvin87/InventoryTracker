@@ -77,19 +77,48 @@ export function DataTable({
         }
       });
     } else {
-      // Standardsortering: Artikelnummer (primärt), Vikt (sekundärt), Batchnummer (tertiärt)
-      sortedResults = sortedResults.sort((a, b) => {
-        // Primär sortering på artikelnummer
-        const articleComp = a.articleNumber.localeCompare(b.articleNumber);
-        if (articleComp !== 0) return articleComp;
-
-        // Sekundär sortering på vikt
-        if (a.totalWeight !== b.totalWeight) {
-          return a.totalWeight > b.totalWeight ? -1 : 1; // Högst vikt först
+      // Definiera sorteringsordning i array: [artikelnummer, vikt (fallande), batchnummer]
+      const sortOrder: Array<{
+        field: keyof BatchItem;
+        direction: 'asc' | 'desc';
+        type: 'string' | 'number';
+      }> = [
+        { field: 'articleNumber', direction: 'asc', type: 'string' },
+        { field: 'totalWeight', direction: 'desc', type: 'number' },
+        { field: 'batchNumber', direction: 'asc', type: 'string' }
+      ];
+      
+      // Tillämpa sortering i angiven ordning
+      sortedResults.sort((a, b) => {
+        // Gå igenom varje sorteringskriterium tills vi hittar en skillnad
+        for (const sort of sortOrder) {
+          const aValue = a[sort.field];
+          const bValue = b[sort.field];
+          
+          // Hantera null och undefined
+          if (aValue === null || aValue === undefined) return 1;
+          if (bValue === null || bValue === undefined) return -1;
+          
+          // Sortera baserat på typ
+          if (sort.type === 'string') {
+            const comparison = String(aValue).localeCompare(String(bValue));
+            if (comparison !== 0) {
+              return sort.direction === 'asc' ? comparison : -comparison;
+            }
+          } else {
+            // Numerisk sortering
+            const aNum = Number(aValue);
+            const bNum = Number(bValue);
+            if (aNum !== bNum) {
+              return sort.direction === 'asc' 
+                ? aNum - bNum 
+                : bNum - aNum;
+            }
+          }
         }
-
-        // Tertiär sortering på batchnummer
-        return a.batchNumber.localeCompare(b.batchNumber);
+        
+        // Om alla fält är identiska, behåll befintlig ordning
+        return 0;
       });
     }
 
