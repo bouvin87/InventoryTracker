@@ -11,6 +11,7 @@ export async function apiRequest<T = any>(
   method: string,
   url: string,
   data?: unknown | undefined,
+  parseJson = true,
 ): Promise<T> {
   const res = await fetch(url, {
     method,
@@ -20,7 +21,13 @@ export async function apiRequest<T = any>(
   });
 
   await throwIfResNotOk(res);
-  return await res.json();
+  
+  // Vissa endpoints (som /api/logout) returnerar ingen JSON
+  if (parseJson) {
+    return await res.json();
+  } else {
+    return res as unknown as T;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

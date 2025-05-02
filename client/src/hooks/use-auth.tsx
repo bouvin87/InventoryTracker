@@ -118,7 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      // Skicka false för att inte försöka tolka svaret som JSON
+      await apiRequest("POST", "/api/logout", undefined, false);
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
