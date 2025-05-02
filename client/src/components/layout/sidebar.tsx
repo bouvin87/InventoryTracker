@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { getCurrentUser } from "@/lib/userStore";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [location] = useLocation();
-  const currentUser = getCurrentUser();
+  const { user } = useAuth();
 
   const isActive = (path: string) => {
     return location === path;
@@ -103,16 +103,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       
       <div className="absolute bottom-0 w-64 p-4 border-t">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium">
-            {currentUser.name.substring(0, 2).toUpperCase()}
+          <div className="flex items-center justify-between w-full">
+            {/* Stängknapp för mobil */}
+            <button onClick={onClose} className="ml-auto text-gray-400 hover:text-gray-500 md:hidden">
+              <span className="material-icons text-lg">close</span>
+            </button>
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-gray-700">{currentUser.name}</p>
-            <p className="text-xs text-gray-500">{currentUser.role}</p>
-          </div>
-          <button onClick={onClose} className="ml-auto text-gray-400 hover:text-gray-500 md:hidden">
-            <span className="material-icons text-lg">close</span>
-          </button>
         </div>
       </div>
     </aside>
