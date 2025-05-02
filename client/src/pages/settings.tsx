@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { users, getCurrentUser, setCurrentUser as setGlobalUser } from "@/lib/userStore";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Settings() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -18,19 +17,7 @@ export default function Settings() {
   // Clear all batches
   const clearAllBatchesMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/batches', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to clear batches');
-      }
-      
-      return response.json();
+      return await apiRequest("DELETE", "/api/batches");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
@@ -54,31 +41,8 @@ export default function Settings() {
     }
   };
 
-  const [currentUserIndex, setCurrentUserIndex] = useState(0);
-  const [currentUser, setCurrentUser] = useState(getCurrentUser());
-
-  // Uppdatera den lokala state när vi byter användare
-  useEffect(() => {
-    setCurrentUser(getCurrentUser());
-  }, []);
-  
-  const handleUserChange = async (userIndexString: string) => {
-    const userIndex = parseInt(userIndexString);
-    setCurrentUserIndex(userIndex);
-    
-    // Uppdatera global user store - funktionen från userStore
-    setGlobalUser(userIndex);
-    
-    // Uppdatera lokal state med React hook
-    const updatedUser = users[userIndex];
-    setCurrentUser(prevUser => updatedUser);
-    
-    // Visa ett meddelande efter användarval
-    toast({
-      title: "Användare bytt",
-      description: `Du är nu inloggad som ${users[userIndex].name}`,
-    });
-  };
+  // Hämta användarinformation från auth context
+  const { user, logoutMutation } = useAuth();
   
   return (
     <div className="flex h-screen overflow-hidden">
@@ -107,42 +71,43 @@ export default function Settings() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* User management section */}
+            {/* User info section */}
             <Card>
               <CardHeader>
-                <CardTitle>Användare</CardTitle>
+                <CardTitle>Användarinformation</CardTitle>
                 <CardDescription>
-                  Välj användare för inventering
+                  Information om inloggad användare
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-medium">Aktuell användare</h3>
+                    <h3 className="text-lg font-medium">Inloggad som</h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      {currentUser.name} ({currentUser.role})
+                      {user?.name} ({user?.role})
                     </p>
                   </div>
                   
                   <Separator />
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="user-select">Byt användare</Label>
-                    <Select onValueChange={handleUserChange} defaultValue={currentUserIndex.toString()}>
-                      <SelectTrigger id="user-select" className="w-full">
-                        <SelectValue placeholder="Välj användare" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.map((user, index) => (
-                          <SelectItem key={user.id} value={index.toString()}>
-                            {user.name} - {user.role}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div>
+                    <h3 className="text-lg font-medium">Användare</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {user?.username}
+                    </p>
                   </div>
                 </div>
               </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => logoutMutation.mutate()}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <span className="material-icons mr-2 text-sm">logout</span>
+                  Logga ut
+                </Button>
+              </CardFooter>
             </Card>
             
             {/* Data management section */}
