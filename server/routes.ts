@@ -2,10 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { parseExcel, generateExcel } from "./excel";
-import { insertBatchSchema, updateBatchSchema } from "@shared/schema";
+import { insertBatchSchema, updateBatchSchema, users, batches } from "@shared/schema";
 import multer from "multer";
 import { z } from "zod";
 import { setupAuth } from "./auth";
+import { db } from "./db";
 
 // Configure multer for file uploads
 const upload = multer({ 
@@ -26,6 +27,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Failed to get users" });
+    }
+  });
+  
+  // Reset database (dev only)
+  app.post('/api/reset-db', async (req, res) => {
+    try {
+      // Ta bort alla befintliga användare och batches
+      await db.delete(users);
+      await db.delete(batches);
+      
+      // Återskapa standardanvändare
+      await storage.initializeUsers();
+      
+      res.json({ message: "Database has been reset" });
+    } catch (error) {
+      console.error("Error resetting database:", error);
+      res.status(500).json({ message: "Failed to reset database" });
     }
   });
 

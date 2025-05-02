@@ -9,6 +9,8 @@ const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   sessionStore: any; // Sessionslagring för Express
+  initializeUsers(): Promise<void>;
+  initializeSampleBatches(): Promise<void>;
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
@@ -36,7 +38,7 @@ export class DatabaseStorage implements IStorage {
     this.initializeUsers();
   }
   
-  private async initializeUsers() {
+  async initializeUsers() {
     const usersResult = await db.select().from(users);
     
     if (usersResult.length === 0) {
@@ -79,7 +81,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  private async initializeSampleBatches() {
+  async initializeSampleBatches() {
     const sampleData: InsertBatch[] = [
       {
         batchNumber: "A12345",
