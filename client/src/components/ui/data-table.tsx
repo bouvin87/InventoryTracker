@@ -88,12 +88,12 @@ export function DataTable({
         articleGroups[articleNumber].push(batch);
       });
       
-      // Steg 2: Sortera varje grupp efter vikt (fallande) och sedan batchnummer
+      // Steg 2: Sortera varje grupp efter vikt (stigande från låg till hög) och sedan batchnummer
       Object.keys(articleGroups).forEach(articleNumber => {
         articleGroups[articleNumber].sort((a, b) => {
-          // Primär sortering på vikt (högst först)
+          // Primär sortering på vikt (lägst först)
           if (a.totalWeight !== b.totalWeight) {
-            return b.totalWeight - a.totalWeight;
+            return a.totalWeight - b.totalWeight;
           }
           
           // Sekundär sortering på batchnummer
