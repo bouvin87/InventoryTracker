@@ -1,11 +1,10 @@
 import { BatchItem, InsertBatch, UpdateBatchItem, User, InsertUser, batches, users } from "@shared/schema";
-import { db } from "./db";
+import { db, initializeTables } from "./db";
 import { eq, and, desc } from "drizzle-orm";
-import connectPg from "connect-pg-simple";
 import session from "express-session";
-import { pool } from "./db";
+import SQLiteStore from "connect-sqlite3";
 
-const PostgresSessionStore = connectPg(session);
+const SqliteStore = SQLiteStore(session);
 
 export interface IStorage {
   sessionStore: any; // Sessionslagring för Express
@@ -29,9 +28,14 @@ export class DatabaseStorage implements IStorage {
   sessionStore: any;
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({ 
-      pool, 
-      createTableIfMissing: true 
+    // Initiera tabeller i SQLite-databasen
+    initializeTables();
+    
+    // Skapa session store
+    this.sessionStore = new SqliteStore({
+      db: 'sessions.db',
+      dir: './',  // Sökväg där databas ska sparas
+      table: 'sessions'
     });
     
     // Skapa standard användare om det inte finns några

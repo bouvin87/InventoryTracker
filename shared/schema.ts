@@ -1,9 +1,9 @@
-import { pgTable, text, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const batches = pgTable("batches", {
-  id: serial("id").primaryKey(),
+export const batches = sqliteTable("batches", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   batchNumber: text("batch_number").notNull().unique(),
   articleNumber: text("article_number").notNull(),
   description: text("description").notNull(),
@@ -16,8 +16,8 @@ export const batches = pgTable("batches", {
   userName: text("user_name"),
 });
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
