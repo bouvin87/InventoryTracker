@@ -79,34 +79,34 @@ export function DataTable({
     } else {
       // Steg 1: Gruppera batches efter artikelnummer
       const articleGroups: Record<string, BatchItem[]> = {};
-      
-      sortedResults.forEach(batch => {
+
+      sortedResults.forEach((batch) => {
         const articleNumber = batch.articleNumber;
         if (!articleGroups[articleNumber]) {
           articleGroups[articleNumber] = [];
         }
         articleGroups[articleNumber].push(batch);
       });
-      
+
       // Steg 2: Sortera varje grupp efter vikt (stigande från låg till hög) och sedan batchnummer
-      Object.keys(articleGroups).forEach(articleNumber => {
+      Object.keys(articleGroups).forEach((articleNumber) => {
         articleGroups[articleNumber].sort((a, b) => {
           // Primär sortering på vikt (lägst först)
           if (a.totalWeight !== b.totalWeight) {
             return a.totalWeight - b.totalWeight;
           }
-          
+
           // Sekundär sortering på batchnummer
           return a.batchNumber.localeCompare(b.batchNumber);
         });
       });
-      
+
       // Steg 3: Sortera artikelnummer i stigande ordning
       const sortedArticleNumbers = Object.keys(articleGroups).sort();
-      
+
       // Steg 4: Flata ut resultatet tillbaka till en array
       sortedResults = [];
-      sortedArticleNumbers.forEach(articleNumber => {
+      sortedArticleNumbers.forEach((articleNumber) => {
         sortedResults.push(...articleGroups[articleNumber]);
       });
     }
@@ -349,7 +349,7 @@ export function DataTable({
                                 className="h-8 w-8 text-green-600"
                                 onClick={() => onInventoryComplete(item)}
                               >
-                                <span className="material-icons text-sm">
+                                <span className="material-icons text">
                                   check_circle
                                 </span>
                               </Button>
@@ -369,7 +369,7 @@ export function DataTable({
                                 className="h-8 w-8 text-blue-600"
                                 onClick={() => onInventoryPartial(item)}
                               >
-                                <span className="material-icons text-sm">
+                                <span className="material-icons text">
                                   indeterminate_check_box
                                 </span>
                               </Button>
@@ -394,7 +394,7 @@ export function DataTable({
                                 className="h-8 w-8 text-green-600"
                                 onClick={() => onInventoryComplete(item)}
                               >
-                                <span className="material-icons text-sm">
+                                <span className="material-icons text">
                                   check_circle
                                 </span>
                               </Button>
@@ -414,9 +414,7 @@ export function DataTable({
                                 className="h-8 w-8 text-blue-600"
                                 onClick={() => onInventoryPartial(item)}
                               >
-                                <span className="material-icons text-sm">
-                                  add
-                                </span>
+                                <span className="material-icons text">add</span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -440,7 +438,7 @@ export function DataTable({
                                 className="h-8 w-8 text-red-600"
                                 onClick={() => onUndoInventory(item)}
                               >
-                                <span className="material-icons text-sm">
+                                <span className="material-icons text">
                                   undo
                                 </span>
                               </Button>
