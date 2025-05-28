@@ -21,21 +21,21 @@ export function TopBar({ toggleSidebar, onSearch, onAddBatch }: TopBarProps) {
   return (
     <div className="bg-white shadow-sm sticky top-0 z-10">
       <div className="flex items-center justify-between h-16 px-6">
-        <div className="flex items-center md:hidden">
+        <div className="flex items-center">
           <button
             type="button"
-            className="text-gray-500 hover:text-gray-600"
+            className="text-gray-500 hover:text-gray-600 mr-3"
             onClick={toggleSidebar}
           >
             <span className="material-icons">menu</span>
           </button>
-          <h1 className="text-lg font-semibold text-primary ml-3">
+          <h1 className="text-lg font-semibold text-primary">
             Batchinventering
           </h1>
         </div>
 
         {/* På större skärmar: sökfält till vänster */}
-        <div className="hidden md:flex items-center flex-1">
+        <div className="hidden md:flex items-center flex-1 ml-6">
           <div className="relative w-64">
             <Input
               type="text"

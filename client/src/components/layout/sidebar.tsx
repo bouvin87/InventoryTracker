@@ -16,13 +16,28 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   return (
-    <aside className={cn(
-      "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:block",
-      isOpen ? "translate-x-0" : "-translate-x-full"
-    )}>
-      <div className="flex items-center justify-center h-16 border-b">
-        <h1 className="text-xl font-semibold text-primary">Batchinventering</h1>
-      </div>
+    <>
+      {/* Overlay för att stänga menyn när man klickar utanför */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={onClose}
+        />
+      )}
+      
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="flex items-center justify-between h-16 border-b px-4">
+          <h1 className="text-xl font-semibold text-primary">Batchinventering</h1>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 p-1"
+          >
+            <span className="material-icons text-lg">close</span>
+          </button>
+        </div>
       
       <nav className="mt-6 px-4">
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
@@ -104,13 +119,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div className="absolute bottom-0 w-64 p-4 border-t">
         <div className="flex items-center">
           <div className="flex items-center justify-between w-full">
-            {/* Stängknapp för mobil */}
-            <button onClick={onClose} className="ml-auto text-gray-400 hover:text-gray-500 md:hidden">
-              <span className="material-icons text-lg">close</span>
-            </button>
+            <div className="text-xs text-gray-500">
+              {user ? `Inloggad som ${user.name}` : 'Ej inloggad'}
+            </div>
           </div>
         </div>
       </div>
     </aside>
+    </>
   );
 }
