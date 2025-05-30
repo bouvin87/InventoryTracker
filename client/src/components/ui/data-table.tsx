@@ -37,6 +37,8 @@ export function DataTable({
   const [showUser, setShowUser] = useState<boolean>(false);
   const [showStatus, setShowStatus] = useState<boolean>(true);
   const [showInventoried, setShowInventoried] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(50); // Visa 50 rader åt gången för bättre prestanda
 
   // Handle sorting
   const toggleSort = (field: string) => {
@@ -148,7 +150,15 @@ export function DataTable({
       style={{ maxWidth: "100%" }}
     >
       <div className="p-4 border-b flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-800">Inventeringslista</h3>
+        <div>
+          <h3 className="text-lg font-medium text-gray-800">Inventeringslista</h3>
+          <p className="text-sm text-gray-500">
+            {sortedData.length > itemsPerPage 
+              ? `Visar ${Math.min(currentPage * itemsPerPage, sortedData.length)} av ${sortedData.length} poster`
+              : `${sortedData.length} poster`
+            }
+          </p>
+        </div>
 
         <div className="flex gap-2 flex-wrap">
           <Button
@@ -291,7 +301,9 @@ export function DataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.map((item) => (
+            {sortedData
+              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+              .map((item) => (
               <TableRow key={item.id} className="hover:bg-gray-50">
                 {showStatus && (
                   <TableCell>
@@ -457,16 +469,54 @@ export function DataTable({
         </Table>
       </div>
 
-      <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
-        <div className="flex-1 flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              Visar alla{" "}
-              <span className="font-medium">{sortedData.length}</span> poster
-            </p>
+      {/* Paginering för bättre prestanda */}
+      {sortedData.length > itemsPerPage && (
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
+          <div className="flex-1 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Visar{" "}
+                <span className="font-medium">
+                  {(currentPage - 1) * itemsPerPage + 1}
+                </span>{" "}
+                till{" "}
+                <span className="font-medium">
+                  {Math.min(currentPage * itemsPerPage, sortedData.length)}
+                </span>{" "}
+                av{" "}
+                <span className="font-medium">{sortedData.length}</span> poster
+              </p>
+            </div>
+            <div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md text-sm font-medium"
+                >
+                  <span className="material-icons text-sm">chevron_left</span>
+                  Föregående
+                </Button>
+                <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                  Sida {currentPage} av {Math.ceil(sortedData.length / itemsPerPage)}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(Math.ceil(sortedData.length / itemsPerPage), currentPage + 1))}
+                  disabled={currentPage === Math.ceil(sortedData.length / itemsPerPage)}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md text-sm font-medium"
+                >
+                  Nästa
+                  <span className="material-icons text-sm">chevron_right</span>
+                </Button>
+              </nav>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
