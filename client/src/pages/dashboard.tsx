@@ -31,6 +31,8 @@ export default function Dashboard() {
   const [filters, setFilters] = useState<FilterValues>({
     status: "all",
     batchNumber: "",
+    articleNumber: "",
+    description: "",
   });
 
   const { toast } = useToast();
@@ -118,7 +120,21 @@ export default function Dashboard() {
           .toLowerCase()
           .includes(filters.batchNumber.toLowerCase());
 
-      return searchMatch && statusMatch && batchNumberMatch;
+      // Article number filter
+      const articleNumberMatch =
+        !filters.articleNumber ||
+        batch.articleNumber
+          .toLowerCase()
+          .includes(filters.articleNumber.toLowerCase());
+
+      // Description filter
+      const descriptionMatch =
+        !filters.description ||
+        batch.description
+          .toLowerCase()
+          .includes(filters.description.toLowerCase());
+
+      return searchMatch && statusMatch && batchNumberMatch && articleNumberMatch && descriptionMatch;
     });
   }, [batches, searchTerm, filters]);
 
