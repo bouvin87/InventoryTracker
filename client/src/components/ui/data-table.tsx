@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from "react";
+import React, { useState, useMemo, memo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -23,6 +23,7 @@ interface DataTableProps {
   onInventoryComplete: (item: BatchItem) => void;
   onInventoryPartial: (item: BatchItem) => void;
   onUndoInventory?: (item: BatchItem) => void;
+  resetToFirstPage?: boolean;
 }
 
 export function DataTable({
@@ -31,6 +32,7 @@ export function DataTable({
   onInventoryComplete,
   onInventoryPartial,
   onUndoInventory,
+  resetToFirstPage,
 }: DataTableProps) {
   const [sortField, setSortField] = useState<keyof BatchItem | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -46,6 +48,11 @@ export function DataTable({
     setItemsPerPage(Number(value));
     setCurrentPage(1);
   };
+
+  // Återställ till första sidan när data ändras (vid filtrering)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data.length]);
 
   // Handle sorting
   const toggleSort = (field: string) => {
