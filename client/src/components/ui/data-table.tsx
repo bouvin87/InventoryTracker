@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DataTableProps {
   data: BatchItem[];
@@ -38,7 +39,13 @@ export function DataTable({
   const [showStatus, setShowStatus] = useState<boolean>(true);
   const [showInventoried, setShowInventoried] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(50); // Visa 50 rader åt gången för bättre prestanda
+  const [itemsPerPage, setItemsPerPage] = useState(50); // Visa 50 rader åt gången som standard
+
+  // Återställ till första sidan när itemsPerPage ändras
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1);
+  };
 
   // Handle sorting
   const toggleSort = (field: string) => {
@@ -470,53 +477,69 @@ export function DataTable({
       </div>
 
       {/* Paginering för bättre prestanda */}
-      {sortedData.length > itemsPerPage && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
-          <div className="flex-1 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Visar{" "}
-                <span className="font-medium">
-                  {(currentPage - 1) * itemsPerPage + 1}
-                </span>{" "}
-                till{" "}
-                <span className="font-medium">
-                  {Math.min(currentPage * itemsPerPage, sortedData.length)}
-                </span>{" "}
-                av{" "}
-                <span className="font-medium">{sortedData.length}</span> poster
-              </p>
-            </div>
-            <div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-2 py-2 rounded-l-md text-sm font-medium"
-                >
-                  <span className="material-icons text-sm">chevron_left</span>
-                  Föregående
-                </Button>
-                <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                  Sida {currentPage} av {Math.ceil(sortedData.length / itemsPerPage)}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.min(Math.ceil(sortedData.length / itemsPerPage), currentPage + 1))}
-                  disabled={currentPage === Math.ceil(sortedData.length / itemsPerPage)}
-                  className="relative inline-flex items-center px-2 py-2 rounded-r-md text-sm font-medium"
-                >
-                  Nästa
-                  <span className="material-icons text-sm">chevron_right</span>
-                </Button>
-              </nav>
-            </div>
+      <div className="bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 gap-4">
+        <div className="flex items-center gap-4">
+          <div>
+            <p className="text-sm text-gray-700">
+              Visar{" "}
+              <span className="font-medium">
+                {sortedData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
+              </span>{" "}
+              till{" "}
+              <span className="font-medium">
+                {Math.min(currentPage * itemsPerPage, sortedData.length)}
+              </span>{" "}
+              av{" "}
+              <span className="font-medium">{sortedData.length}</span> poster
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">Rader per sida:</span>
+            <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="200">200</SelectItem>
+                <SelectItem value={sortedData.length.toString()}>Alla</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      )}
+        
+        {sortedData.length > itemsPerPage && (
+          <div>
+            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-2 py-2 rounded-l-md text-sm font-medium"
+              >
+                <span className="material-icons text-sm">chevron_left</span>
+                Föregående
+              </Button>
+              <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                Sida {currentPage} av {Math.ceil(sortedData.length / itemsPerPage)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(Math.ceil(sortedData.length / itemsPerPage), currentPage + 1))}
+                disabled={currentPage === Math.ceil(sortedData.length / itemsPerPage)}
+                className="relative inline-flex items-center px-2 py-2 rounded-r-md text-sm font-medium"
+              >
+                Nästa
+                <span className="material-icons text-sm">chevron_right</span>
+              </Button>
+            </nav>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
