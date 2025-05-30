@@ -471,7 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notify WebSocket clients of batch changes
   // Throttle-funktion för att förhindra för många uppdateringar på kort tid
   let updateTimeout: NodeJS.Timeout | null = null;
-  const throttleTime = 500; // 500ms
+  const throttleTime = 2000; // 2000ms (2 sekunder) för bättre prestanda på mobila enheter
   
   const notifyBatchUpdate = () => {
     // Om en uppdatering redan är planerad, gör ingenting

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
@@ -63,12 +63,14 @@ export default function Dashboard() {
           // Uppdatera cache direkt för sömlös uppdatering
           queryClient.setQueryData(["/api/batches"], data.data);
           
-          // Visa temporär visuell indikation att data har uppdaterats
-          setUpdatedRecently(true);
-          setTimeout(() => setUpdatedRecently(false), 2000);
+          // Bara visa visuell indikation om det inte är en initial load
+          if (data.data.length !== batches?.length) {
+            setUpdatedRecently(true);
+            setTimeout(() => setUpdatedRecently(false), 1000);
+          }
           
-          // Logga information i utvecklingsläge
-          if (import.meta.env.DEV) {
+          // Mindre logging för bättre prestanda
+          if (import.meta.env.DEV && data.data.length !== batches?.length) {
             console.log(`Realtidsuppdatering: ${data.data.length} poster mottagna`);
           }
         }
@@ -93,9 +95,11 @@ export default function Dashboard() {
     }
   }, [readyState, hasShownConnectedToast, toast]);
 
-  // Filter data based on search term and filters
-  const filteredBatches =
-    batches?.filter((batch) => {
+  // Memoized filtering för bättre prestanda
+  const filteredBatches = useMemo(() => {
+    if (!batches) return [];
+    
+    return batches.filter((batch) => {
       // Search filter
       const searchMatch =
         !searchTerm ||
@@ -115,35 +119,55 @@ export default function Dashboard() {
           .includes(filters.batchNumber.toLowerCase());
 
       return searchMatch && statusMatch && batchNumberMatch;
-    }) || [];
+    });
+  }, [batches, searchTerm, filters]);
 
-  // Calculate statistics
-  const totalBatches = filteredBatches.length;
-  const completedBatches = filteredBatches.filter(
-    (b) => b.status === "completed",
-  ).length;
-  const partiallyCompletedBatches = filteredBatches.filter(
-    (b) => b.status === "partially_completed",
-  ).length;
-  const notStartedBatches = filteredBatches.filter(
-    (b) => b.status === "not_started",
-  ).length;
-  const completionPercentage = totalBatches
-    ? Math.round((completedBatches / totalBatches) * 100)
-    : 0;
+  // Memoized statistics för bättre prestanda
+  const statistics = useMemo(() => {
+    const totalBatches = filteredBatches.length;
+    const completedBatches = filteredBatches.filter(
+      (b) => b.status === "completed",
+    ).length;
+    const partiallyCompletedBatches = filteredBatches.filter(
+      (b) => b.status === "partially_completed",
+    ).length;
+    const notStartedBatches = filteredBatches.filter(
+      (b) => b.status === "not_started",
+    ).length;
+    const completionPercentage = totalBatches
+      ? Math.round((completedBatches / totalBatches) * 100)
+      : 0;
 
-  // Calculate weight statistics
-  const totalWeightToInventory = filteredBatches.reduce(
-    (sum, batch) => sum + batch.totalWeight,
-    0,
-  );
-  const totalInventoriedWeight = filteredBatches.reduce((sum, batch) => {
-    return sum + (batch.inventoredWeight !== null ? batch.inventoredWeight : 0);
-  }, 0);
-  const weightDifference = totalInventoriedWeight - totalWeightToInventory;
-  const weightCompletionPercentage = totalWeightToInventory
-    ? Math.round((totalInventoriedWeight / totalWeightToInventory) * 100)
-    : 0;
+    return {
+      totalBatches,
+      completedBatches,
+      partiallyCompletedBatches,
+      notStartedBatches,
+      completionPercentage,
+    };
+  }, [filteredBatches]);
+
+  // Memoized weight statistics för bättre prestanda
+  const weightStatistics = useMemo(() => {
+    const totalWeightToInventory = filteredBatches.reduce(
+      (sum, batch) => sum + batch.totalWeight,
+      0,
+    );
+    const totalInventoriedWeight = filteredBatches.reduce((sum, batch) => {
+      return sum + (batch.inventoredWeight !== null ? batch.inventoredWeight : 0);
+    }, 0);
+    const weightDifference = totalInventoriedWeight - totalWeightToInventory;
+    const weightCompletionPercentage = totalWeightToInventory
+      ? Math.round((totalInventoriedWeight / totalWeightToInventory) * 100)
+      : 0;
+
+    return {
+      totalWeightToInventory,
+      totalInventoriedWeight,
+      weightDifference,
+      weightCompletionPercentage,
+    };
+  }, [filteredBatches]);
 
   // Update batch mutation
   const updateBatchMutation = useMutation({
@@ -461,11 +485,11 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div className="lg:col-span-1">
               <BatchStatsCard
-                totalBatches={totalBatches}
-                completedBatches={completedBatches}
-                partiallyCompletedBatches={partiallyCompletedBatches}
-                notStartedBatches={notStartedBatches}
-                completionPercentage={completionPercentage}
+                totalBatches={statistics.totalBatches}
+                completedBatches={statistics.completedBatches}
+                partiallyCompletedBatches={statistics.partiallyCompletedBatches}
+                notStartedBatches={statistics.notStartedBatches}
+                completionPercentage={statistics.completionPercentage}
               />
             </div>
 
@@ -491,12 +515,12 @@ export default function Dashboard() {
                       Viktinventerat
                     </div>
                     <div className="text-xs font-semibold text-gray-600">
-                      {weightCompletionPercentage}%
+                      {weightStatistics.weightCompletionPercentage}%
                     </div>
                   </div>
                   <div className="overflow-hidden h-3 text-xs flex rounded bg-gray-100">
                     <div
-                      style={{ width: `${weightCompletionPercentage}%` }}
+                      style={{ width: `${weightStatistics.weightCompletionPercentage}%` }}
                       className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"
                     ></div>
                   </div>
@@ -506,7 +530,7 @@ export default function Dashboard() {
                   <div className="p-4 rounded-lg bg-orange-50 flex flex-col items-center justify-center">
                     <span className="text-sm text-gray-500">Totalt</span>
                     <span className="text-2xl font-bold text-gray-900">
-                      {totalWeightToInventory.toFixed(0)}
+                      {weightStatistics.totalWeightToInventory.toFixed(0)}
                     </span>
                     <span className="text-xs text-gray-500">kg</span>
                   </div>
@@ -514,20 +538,20 @@ export default function Dashboard() {
                   <div className="p-4 rounded-lg bg-indigo-50 flex flex-col items-center justify-center">
                     <span className="text-sm text-gray-500">Inventerat</span>
                     <span className="text-2xl font-bold text-indigo-700">
-                      {totalInventoriedWeight.toFixed(0)}
+                      {weightStatistics.totalInventoriedWeight.toFixed(0)}
                     </span>
                     <span className="text-xs text-gray-500">kg</span>
                   </div>
 
                   <div
-                    className={`p-4 rounded-lg flex flex-col items-center justify-center ${weightDifference >= 0 ? "bg-emerald-50" : "bg-rose-50"}`}
+                    className={`p-4 rounded-lg flex flex-col items-center justify-center ${weightStatistics.weightDifference >= 0 ? "bg-emerald-50" : "bg-rose-50"}`}
                   >
                     <span className="text-sm text-gray-500">Differens</span>
                     <span
-                      className={`text-2xl font-bold ${weightDifference >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                      className={`text-2xl font-bold ${weightStatistics.weightDifference >= 0 ? "text-emerald-600" : "text-rose-600"}`}
                     >
-                      {weightDifference >= 0 ? "+" : ""}
-                      {weightDifference.toFixed()}
+                      {weightStatistics.weightDifference >= 0 ? "+" : ""}
+                      {weightStatistics.weightDifference.toFixed()}
                     </span>
                     <span className="text-xs text-gray-500">kg</span>
                   </div>

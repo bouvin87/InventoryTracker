@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, memo } from "react";
 import {
   Table,
   TableBody,
@@ -148,7 +148,14 @@ export function DataTable({
       style={{ maxWidth: "100%" }}
     >
       <div className="p-4 border-b flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-800">Inventeringslista</h3>
+        <div>
+          <h3 className="text-lg font-medium text-gray-800">Inventeringslista</h3>
+          {sortedData.length > 100 && (
+            <p className="text-sm text-gray-500">
+              Visar 100 av {sortedData.length} poster (optimerat för prestanda)
+            </p>
+          )}
+        </div>
 
         <div className="flex gap-2 flex-wrap">
           <Button
@@ -291,7 +298,7 @@ export function DataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.map((item) => (
+            {sortedData.slice(0, 100).map((item) => (
               <TableRow key={item.id} className="hover:bg-gray-50">
                 {showStatus && (
                   <TableCell>
