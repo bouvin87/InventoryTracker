@@ -14,20 +14,41 @@ declare global {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'development-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    secret: process.env.SESSION_SECRET || 'development-secret-key-12345',
+    resave: true, // Ändrat till true för bättre sessionhantering
+    saveUninitialized: true, // Ändrat till true för att säkerställa sessionsskapande
     store: storage.sessionStore,
+    rolling: true, // Förnya sessionstiden vid varje request
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 vecka
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Alltid false för lokal utveckling
+      httpOnly: true,
+      sameSite: 'lax'
     }
   };
 
-  app.set("trust proxy", 1);
+  // Enklare konfiguration för lokal utveckling
+  if (process.env.NODE_ENV === 'production') {
+    app.set("trust proxy", 1);
+  }
+  
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Debug sessionhantering endast för inloggningsrelaterade routes
+  app.use('/api/login', (req, res, next) => {
+    console.log('Login attempt - Session ID:', req.sessionID);
+    console.log('User authenticated before login:', req.isAuthenticated());
+    next();
+  });
+  
+  app.use('/api/user', (req, res, next) => {
+    console.log('User check - Session ID:', req.sessionID);
+    console.log('User authenticated:', req.isAuthenticated());
+    if (req.user) console.log('Current user:', req.user.name);
+    next();
+  });
 
   passport.use(
     new LocalStrategy({
@@ -96,7 +117,17 @@ export function setupAuth(app: Express) {
       
       req.login(user, (err: any) => {
         if (err) return next(err);
-        res.status(200).json(user);
+        
+        // Spara sessionen explicit
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return next(saveErr);
+          }
+          
+          console.log(`User ${user.name} logged in successfully via username, session saved`);
+          res.status(200).json(user);
+        });
       });
     })(req, res, next);
   });
@@ -108,12 +139,27 @@ export function setupAuth(app: Express) {
       const user = await storage.getUser(userId);
       
       if (!user) {
+        console.log(`User with ID ${userId} not found`);
         return res.status(404).json({ message: "Användaren hittades inte" });
       }
       
+      // Säkerställ att sessionen sparas
       req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(200).json(user);
+        if (err) {
+          console.error("Login error:", err);
+          return next(err);
+        }
+        
+        // Spara sessionen explicit
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return next(saveErr);
+          }
+          
+          console.log(`User ${user.name} logged in successfully, session saved`);
+          res.status(200).json(user);
+        });
       });
     } catch (error) {
       console.error("Error in direct login:", error);
