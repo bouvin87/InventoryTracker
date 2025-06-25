@@ -195,12 +195,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User> {
-    // Om lösenord anges, hasha det först
-    if (userData.password) {
-      const { hashPassword } = await import('./password-utils');
-      userData.password = await hashPassword(userData.password);
-    }
-
     const [updatedUser] = await db
       .update(users)
       .set(userData)

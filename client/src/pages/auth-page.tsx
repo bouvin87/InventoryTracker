@@ -1,11 +1,23 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Loader2, User } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Definiera typen för användare som kommer från API
 interface UserItem {
@@ -22,7 +34,7 @@ export default function AuthPage() {
 
   // Hämta alla användare för dropdownen
   const { data: users = [], isLoading: usersLoading } = useQuery<UserItem[]>({
-    queryKey: ['/api/users'],
+    queryKey: ["/api/users"],
     staleTime: 30000, // 30 sekunder cache
   });
 
@@ -32,14 +44,14 @@ export default function AuthPage() {
       setLocation("/");
     }
   }, [user, setLocation]);
-  
+
   // Hantera inloggning när användaren väljs
   const handleLogin = () => {
     if (!selectedUserId) return;
-    
+
     // Använd mutationen för att logga in
-    directLoginMutation.mutate({ 
-      userId: parseInt(selectedUserId) 
+    directLoginMutation.mutate({
+      userId: parseInt(selectedUserId),
     });
   };
 
@@ -57,10 +69,10 @@ export default function AuthPage() {
       <div className="w-full md:w-1/2 flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Inventariesystem</CardTitle>
-            <CardDescription>
-              Välj vem du är för att fortsätta
-            </CardDescription>
+            <CardTitle className="text-2xl font-bold">
+              Inventeringssystem
+            </CardTitle>
+            <CardDescription>Välj vem du är för att fortsätta</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -80,16 +92,17 @@ export default function AuthPage() {
                 </SelectContent>
               </Select>
             </div>
-            
-            <Button 
+
+            <Button
               onClick={handleLogin}
               className="w-full"
               disabled={!selectedUserId || directLoginMutation.isPending}
             >
-              {directLoginMutation.isPending ? 
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 
+              {directLoginMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
                 <User className="mr-2 h-4 w-4" />
-              }
+              )}
               Logga in
             </Button>
           </CardContent>
@@ -100,11 +113,13 @@ export default function AuthPage() {
       <div className="hidden md:block md:w-1/2 bg-gray-100 p-12 flex flex-col justify-center">
         <div className="max-w-md mx-auto">
           <h1 className="text-4xl font-bold mb-6">Inventariesystem</h1>
-          <h2 className="text-2xl font-semibold mb-4">Hantera ditt lager enkelt och effektivt</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            Hantera ditt lager enkelt och effektivt
+          </h2>
           <p className="mb-6 text-gray-600">
-            Med vårt inventariesystem kan du enkelt hantera och spåra alla dina lagerartiklar. 
-            Importera och exportera data från Excel, uppdatera inventeringar, och håll koll på 
-            viktinformation på ett smidigt sätt.
+            Med vårt inventariesystem kan du enkelt hantera och spåra alla dina
+            lagerartiklar. Importera och exportera data från Excel, uppdatera
+            inventeringar, och håll koll på viktinformation på ett smidigt sätt.
           </p>
           <ul className="space-y-2 text-gray-600">
             <li className="flex items-center">

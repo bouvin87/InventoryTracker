@@ -46,8 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateSchema = z.object({
         name: z.string().min(1, "Namnet får inte vara tomt"),
         username: z.string().min(1, "Användarnamnet får inte vara tomt"),
-        role: z.string().min(1, "Rollen får inte vara tom"),
-        password: z.string().optional()
+        role: z.string().min(1, "Rollen får inte vara tom")
       });
 
       const validatedData = updateSchema.parse(req.body);

@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { EditUserModal } from "@/components/settings/edit-user-modal";
+import { AddUserModal } from "@/components/settings/add-user-modal";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,6 +23,7 @@ interface User {
 export default function Settings() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [editUserModalOpen, setEditUserModalOpen] = useState(false);
+  const [addUserModalOpen, setAddUserModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { toast } = useToast();
 
@@ -81,6 +83,27 @@ export default function Settings() {
     }
   });
 
+  // Lägg till användare
+  const addUserMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/register", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({
+        title: "Användare skapad",
+        description: "Den nya användaren har lagts till",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fel vid skapande",
+        description: error.message || "Det gick inte att skapa användaren",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Ta bort användare
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -115,6 +138,10 @@ export default function Settings() {
 
   const handleSaveUser = async (id: number, data: any) => {
     await editUserMutation.mutateAsync({ id, data });
+  };
+
+  const handleAddUser = async (data: any) => {
+    await addUserMutation.mutateAsync(data);
   };
   
   return (
@@ -186,7 +213,17 @@ export default function Settings() {
             {/* User management section */}
             <Card>
               <CardHeader>
-                <CardTitle>Användarhantering</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Användarhantering</span>
+                  <Button 
+                    size="sm"
+                    onClick={() => setAddUserModalOpen(true)}
+                    className="ml-4"
+                  >
+                    <span className="material-icons mr-1 text-sm">add</span>
+                    Lägg till
+                  </Button>
+                </CardTitle>
                 <CardDescription>
                   Hantera användarkonton i systemet
                 </CardDescription>
@@ -304,6 +341,13 @@ export default function Settings() {
           onClose={() => setEditUserModalOpen(false)}
           user={selectedUser}
           onSave={handleSaveUser}
+        />
+
+        {/* Add User Modal */}
+        <AddUserModal
+          isOpen={addUserModalOpen}
+          onClose={() => setAddUserModalOpen(false)}
+          onAdd={handleAddUser}
         />
       </main>
     </div>

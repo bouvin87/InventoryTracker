@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,60 +28,42 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const editUserSchema = z.object({
+const addUserSchema = z.object({
   name: z.string().min(1, "Namnet får inte vara tomt"),
   username: z.string().min(1, "Användarnamnet får inte vara tomt"),
-  role: z.string().min(1, "Rollen får inte vara tom")
+  role: z.string().min(1, "Rollen får inte vara tom"),
+  password: z.string().min(4, "Lösenordet måste vara minst 4 tecken")
 });
 
-type EditUserFormData = z.infer<typeof editUserSchema>;
+type AddUserFormData = z.infer<typeof addUserSchema>;
 
-interface User {
-  id: number;
-  name: string;
-  username: string;
-  role: string;
-}
-
-interface EditUserModalProps {
+interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null;
-  onSave: (id: number, data: EditUserFormData) => Promise<void>;
+  onAdd: (data: AddUserFormData) => Promise<void>;
 }
 
-export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalProps) {
+export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<EditUserFormData>({
-    resolver: zodResolver(editUserSchema),
+  const form = useForm<AddUserFormData>({
+    resolver: zodResolver(addUserSchema),
     defaultValues: {
       name: "",
       username: "",
-      role: ""
+      role: "",
+      password: ""
     }
   });
 
-  useEffect(() => {
-    if (user && isOpen) {
-      form.reset({
-        name: user.name,
-        username: user.username,
-        role: user.role
-      });
-    }
-  }, [user, isOpen, form]);
-
-  const handleSubmit = async (data: EditUserFormData) => {
-    if (!user) return;
-
+  const handleSubmit = async (data: AddUserFormData) => {
     setIsSubmitting(true);
     try {
-      await onSave(user.id, data);
+      await onAdd(data);
       onClose();
       form.reset();
     } catch (error) {
-      console.error("Error saving user:", error);
+      console.error("Error adding user:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -96,9 +78,9 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Editera användare</DialogTitle>
+          <DialogTitle>Lägg till ny användare</DialogTitle>
           <DialogDescription>
-            Ändra användaruppgifter som namn, användarnamn och roll.
+            Skapa en ny användare i systemet med namn, användarnamn, roll och lösenord.
           </DialogDescription>
         </DialogHeader>
         
@@ -161,7 +143,23 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
               )}
             />
 
-
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lösenord</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="password"
+                      placeholder="Ange lösenord för användaren"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <DialogFooter>
               <Button
@@ -173,7 +171,7 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
                 Avbryt
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Sparar..." : "Spara ändringar"}
+                {isSubmitting ? "Skapar..." : "Skapa användare"}
               </Button>
             </DialogFooter>
           </form>
