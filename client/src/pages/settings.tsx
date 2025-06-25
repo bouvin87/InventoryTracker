@@ -1,18 +1,34 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { EditUserModal } from "@/components/settings/edit-user-modal";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 
+interface User {
+  id: number;
+  name: string;
+  username: string;
+  role: string;
+}
+
 export default function Settings() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [editUserModalOpen, setEditUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { toast } = useToast();
+
+  // Hämta alla användare
+  const { data: allUsers = [], isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ['/api/users'],
+  });
 
   // Clear all batches
   const clearAllBatchesMutation = useMutation({
@@ -43,6 +59,63 @@ export default function Settings() {
 
   // Hämta användarinformation från auth context
   const { user, logoutMutation } = useAuth();
+
+  // Editera användare
+  const editUserMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      return await apiRequest("PUT", `/api/users/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({
+        title: "Användare uppdaterad",
+        description: "Användaruppgifterna har sparats",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fel vid uppdatering",
+        description: error.message || "Det gick inte att uppdatera användaren",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Ta bort användare
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest("DELETE", `/api/users/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({
+        title: "Användare borttagen",
+        description: "Användaren har tagits bort från systemet",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fel vid borttagning",
+        description: error.message || "Det gick inte att ta bort användaren",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleEditUser = (userToEdit: User) => {
+    setSelectedUser(userToEdit);
+    setEditUserModalOpen(true);
+  };
+
+  const handleDeleteUser = (userToDelete: User) => {
+    if (window.confirm(`Är du säker på att du vill ta bort användaren "${userToDelete.name}"? Denna åtgärd kan inte ångras.`)) {
+      deleteUserMutation.mutate(userToDelete.id);
+    }
+  };
+
+  const handleSaveUser = async (id: number, data: any) => {
+    await editUserMutation.mutateAsync({ id, data });
+  };
   
   return (
     <div className="flex h-screen overflow-hidden">

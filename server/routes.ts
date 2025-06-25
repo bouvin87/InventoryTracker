@@ -37,6 +37,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get users" });
     }
   });
+
+  // Update user
+  app.put('/api/users/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const updateSchema = z.object({
+        name: z.string().min(1, "Namnet får inte vara tomt"),
+        username: z.string().min(1, "Användarnamnet får inte vara tomt"),
+        role: z.string().min(1, "Rollen får inte vara tom"),
+        password: z.string().optional()
+      });
+
+      const validatedData = updateSchema.parse(req.body);
+      
+      const updatedUser = await storage.updateUser(id, validatedData);
+      res.json({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        name: updatedUser.name,
+        role: updatedUser.role
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input values", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Delete user
+  app.delete('/api/users/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Prevent deletion of the currently logged in user
+      if (req.user && req.user.id === id) {
+        return res.status(400).json({ message: "Du kan inte ta bort din egen användare" });
+      }
+      
+      await storage.deleteUser(id);
+      res.json({ message: "Användaren har tagits bort" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
   
   // Visa användardetaljer (dev only)
   app.get('/api/debug-users', async (req, res) => {
