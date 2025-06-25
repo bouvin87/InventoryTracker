@@ -31,8 +31,7 @@ import {
 const addUserSchema = z.object({
   name: z.string().min(1, "Namnet får inte vara tomt"),
   username: z.string().min(1, "Användarnamnet får inte vara tomt"),
-  role: z.string().min(1, "Rollen får inte vara tom"),
-  password: z.string().min(4, "Lösenordet måste vara minst 4 tecken"),
+  role: z.string().min(1, "Rollen får inte vara tom")
 });
 
 type AddUserFormData = z.infer<typeof addUserSchema>;
@@ -51,8 +50,7 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
     defaultValues: {
       name: "",
       username: "",
-      role: "",
-      password: "",
+      role: ""
     },
   });
 
@@ -80,8 +78,7 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
         <DialogHeader>
           <DialogTitle>Lägg till ny användare</DialogTitle>
           <DialogDescription>
-            Skapa en ny användare i systemet med namn, användarnamn, roll och
-            lösenord.
+            Skapa en ny användare i systemet med namn, användarnamn och roll.
           </DialogDescription>
         </DialogHeader>
 
@@ -131,8 +128,9 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Inventerare">Inventerare</SelectItem>
-                      <SelectItem value="Granskare">Granskare</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="operator">Operatör</SelectItem>
+                      <SelectItem value="viewer">Granskare</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
