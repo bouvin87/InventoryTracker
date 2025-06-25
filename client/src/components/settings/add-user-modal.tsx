@@ -32,7 +32,7 @@ const addUserSchema = z.object({
   name: z.string().min(1, "Namnet får inte vara tomt"),
   username: z.string().min(1, "Användarnamnet får inte vara tomt"),
   role: z.string().min(1, "Rollen får inte vara tom"),
-  password: z.string().min(4, "Lösenordet måste vara minst 4 tecken")
+  password: z.string().min(4, "Lösenordet måste vara minst 4 tecken"),
 });
 
 type AddUserFormData = z.infer<typeof addUserSchema>;
@@ -52,8 +52,8 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
       name: "",
       username: "",
       role: "",
-      password: ""
-    }
+      password: "",
+    },
   });
 
   const handleSubmit = async (data: AddUserFormData) => {
@@ -80,12 +80,16 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
         <DialogHeader>
           <DialogTitle>Lägg till ny användare</DialogTitle>
           <DialogDescription>
-            Skapa en ny användare i systemet med namn, användarnamn, roll och lösenord.
+            Skapa en ny användare i systemet med namn, användarnamn, roll och
+            lösenord.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -93,10 +97,7 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
                 <FormItem>
                   <FormLabel>Namn</FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Ange användarens namn"
-                    />
+                    <Input {...field} placeholder="Ange användarens namn" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -110,10 +111,7 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
                 <FormItem>
                   <FormLabel>Användarnamn</FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Ange användarnamnet"
-                    />
+                    <Input {...field} placeholder="Ange användarnamnet" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,29 +131,10 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="operator">Operatör</SelectItem>
-                      <SelectItem value="viewer">Granskare</SelectItem>
+                      <SelectItem value="Inventerare">Inventerare</SelectItem>
+                      <SelectItem value="Granskare">Granskare</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Lösenord</FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      type="password"
-                      placeholder="Ange lösenord för användaren"
-                    />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

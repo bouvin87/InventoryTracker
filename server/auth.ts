@@ -92,17 +92,20 @@ export function setupAuth(app: Express) {
         return res.status(400).send("Användarnamnet finns redan");
       }
 
-      // Hash lösenordet innan det sparas
-      const hashedPassword = await hashPassword(req.body.password);
+      // Skapa användare utan lösenord (använd standardlösenord)
+      const defaultPassword = await hashPassword("default123");
 
       const user = await storage.createUser({
         ...req.body,
-        password: hashedPassword,
+        password: defaultPassword,
       });
 
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
+      // Returnera användaren utan att logga in automatiskt
+      res.status(201).json({
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        role: user.role
       });
     } catch (error) {
       next(error);

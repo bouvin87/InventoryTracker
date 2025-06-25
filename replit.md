@@ -85,11 +85,18 @@ This is a full-stack inventory management system built with a modern React front
 - **Session Security**: Configurable session secrets
 - **File Limits**: 30MB upload limit for large Excel files
 
+## Recent Changes
+
+- **June 25, 2025 - Session Management Fix**: Fixed critical session handling issues in local installation that caused immediate logout after successful login
+- **June 25, 2025 - User Management System**: Added comprehensive user management in settings with ability to edit (name, username, role) and create new users
+- **June 25, 2025 - Performance Optimizations**: Implemented smart pagination, filtering enhancements, and Galaxy Tab A7 optimizations
+- **June 25, 2025 - Initial Setup**: Complete inventory management system with Excel import/export and real-time updates
+
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+Preferred communication style: Simple, everyday language (Swedish).
+Technical preferences: Focus on essential fields only - Username, Name, Role for user editing.
 
 ## Changelog
 
-Changelog:
-- June 25, 2025. Initial setup
+- June 25, 2025. Initial setup and major feature implementations

@@ -31,7 +31,7 @@ import {
 const editUserSchema = z.object({
   name: z.string().min(1, "Namnet får inte vara tomt"),
   username: z.string().min(1, "Användarnamnet får inte vara tomt"),
-  role: z.string().min(1, "Rollen får inte vara tom")
+  role: z.string().min(1, "Rollen får inte vara tom"),
 });
 
 type EditUserFormData = z.infer<typeof editUserSchema>;
@@ -50,7 +50,12 @@ interface EditUserModalProps {
   onSave: (id: number, data: EditUserFormData) => Promise<void>;
 }
 
-export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalProps) {
+export function EditUserModal({
+  isOpen,
+  onClose,
+  user,
+  onSave,
+}: EditUserModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<EditUserFormData>({
@@ -58,8 +63,8 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
     defaultValues: {
       name: "",
       username: "",
-      role: ""
-    }
+      role: "",
+    },
   });
 
   useEffect(() => {
@@ -67,7 +72,7 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
       form.reset({
         name: user.name,
         username: user.username,
-        role: user.role
+        role: user.role,
       });
     }
   }, [user, isOpen, form]);
@@ -101,9 +106,12 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
             Ändra användaruppgifter som namn, användarnamn och roll.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -111,10 +119,7 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
                 <FormItem>
                   <FormLabel>Namn</FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Ange användarens namn"
-                    />
+                    <Input {...field} placeholder="Ange användarens namn" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -128,10 +133,7 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
                 <FormItem>
                   <FormLabel>Användarnamn</FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Ange användarnamnet"
-                    />
+                    <Input {...field} placeholder="Ange användarnamnet" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -151,17 +153,14 @@ export function EditUserModal({ isOpen, onClose, user, onSave }: EditUserModalPr
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="operator">Operatör</SelectItem>
-                      <SelectItem value="viewer">Granskare</SelectItem>
+                      <SelectItem value="Inventerare">Inventerare</SelectItem>
+                      <SelectItem value="Granskare">Granskare</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-
 
             <DialogFooter>
               <Button
