@@ -143,7 +143,7 @@ export default function Settings() {
             <h2 className="text-2xl font-semibold text-gray-800">Inställningar</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* User info section */}
             <Card>
               <CardHeader>
@@ -181,6 +181,61 @@ export default function Settings() {
                   Logga ut
                 </Button>
               </CardFooter>
+            </Card>
+
+            {/* User management section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Användarhantering</CardTitle>
+                <CardDescription>
+                  Hantera användarkonton i systemet
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {usersLoading ? (
+                    <div className="text-sm text-gray-500">Laddar användare...</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {allUsers.map((userItem) => (
+                        <div key={userItem.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{userItem.name}</span>
+                              <Badge variant={userItem.role === 'admin' ? 'default' : 'secondary'}>
+                                {userItem.role}
+                              </Badge>
+                              {user?.id === userItem.id && (
+                                <Badge variant="outline">Du</Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-500">@{userItem.username}</div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditUser(userItem)}
+                            >
+                              <span className="material-icons text-sm">edit</span>
+                            </Button>
+                            {user?.id !== userItem.id && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteUser(userItem)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <span className="material-icons text-sm">delete</span>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
             </Card>
             
             {/* Data management section */}
@@ -242,6 +297,14 @@ export default function Settings() {
             </Card>
           </div>
         </div>
+
+        {/* Edit User Modal */}
+        <EditUserModal
+          isOpen={editUserModalOpen}
+          onClose={() => setEditUserModalOpen(false)}
+          user={selectedUser}
+          onSave={handleSaveUser}
+        />
       </main>
     </div>
   );
