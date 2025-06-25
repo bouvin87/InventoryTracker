@@ -31,7 +31,7 @@ import {
 const addUserSchema = z.object({
   name: z.string().min(1, "Namnet får inte vara tomt"),
   username: z.string().min(1, "Användarnamnet får inte vara tomt"),
-  role: z.string().min(1, "Rollen får inte vara tom")
+  role: z.string().min(1, "Rollen får inte vara tom"),
 });
 
 type AddUserFormData = z.infer<typeof addUserSchema>;
@@ -50,7 +50,7 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
     defaultValues: {
       name: "",
       username: "",
-      role: ""
+      role: "",
     },
   });
 
@@ -128,9 +128,8 @@ export function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="operator">Operatör</SelectItem>
-                      <SelectItem value="viewer">Granskare</SelectItem>
+                      <SelectItem value="Inventerare">Inventerare</SelectItem>
+                      <SelectItem value="Granskare">Granskare</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
